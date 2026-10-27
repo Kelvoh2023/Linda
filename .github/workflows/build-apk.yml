@@ -1,0 +1,57 @@
+# Builds the Linda APK in the cloud. Runs on every upload, or press "Run workflow" in the Actions tab.
+name: Build Linda APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install Capacitor
+        run: npm ci
+
+      - name: Create the Android project
+        run: npx cap add android
+
+      - name: Apply the Linda icon and splash screen
+        run: |
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26
+          cp -r icons-android/. android/app/src/main/res/
+
+      - name: Copy the web app into Android
+        run: npx cap sync android
+
+      - name: Accept Android licences
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" > /dev/null || true
+
+      - name: Build the APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Keep the APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Linda-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
