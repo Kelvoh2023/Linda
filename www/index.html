@@ -1,0 +1,1230 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Linda</title>
+<meta name="theme-color" content="#127A43">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a real full-screen phone app. On a laptop it sits inside a device frame so it presents well on a projector. */
+:root{
+  --page:#E6EDE7; --bg:#F6F8F5; --card:#FFFFFF; --ink:#12201A; --muted:#5E6E65; --line:#DDE4DE;
+  --green:#127A43; --green-soft:#DDF1E4; --red:#C5302B; --red-soft:#FBE3E1; --amber:#8A5F08; --amber-soft:#FBF0D5;
+  --f-display:"Bricolage Grotesque","Trebuchet MS",sans-serif; --f-body:"Figtree","Segoe UI",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--page);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+h1,h2,h3,h4{font-family:var(--f-display);margin:0;text-wrap:balance}
+svg.i{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;width:20px;height:20px;flex:none}
+
+.app{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;padding-top:env(safe-area-inset-top,0px)}
+.sbfake{display:none;justify-content:space-between;align-items:center;padding:10px 24px 4px;font-size:12px;font-weight:600;position:relative}
+.sbfake i{position:absolute;left:50%;top:9px;width:11px;height:11px;border-radius:50%;background:#0B0F0D;transform:translateX(-50%)}
+@media (min-width:600px){
+  body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%}
+  .app{position:relative;inset:auto;width:392px;height:min(840px,calc(100dvh - 64px));min-height:640px;border:10px solid #0B0F0D;border-radius:48px;box-shadow:0 30px 60px -28px rgba(0,0,0,.55);padding-top:0}
+  .sbfake{display:flex}
+  .below{display:block!important}
+}
+.below{display:none;margin-top:14px;font-size:13px;color:var(--muted);text-align:center;max-width:46ch}
+.below a{color:var(--green);font-weight:700}
+
+.view{flex:1;min-height:0;overflow-y:auto;padding:8px max(16px,env(safe-area-inset-left,0px)) 16px max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:12px;overscroll-behavior:contain}
+.hd{display:flex;align-items:center;gap:10px;padding-top:6px}
+.hd h2{font-size:24px;font-weight:800;letter-spacing:-.02em;flex:1}
+.logo{width:36px;height:36px;border-radius:12px;background:var(--green);color:#fff;display:grid;place-items:center;flex:none}
+.pill-btn{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 11px;font-size:12px;font-weight:700;display:inline-flex;gap:6px;align-items:center}
+.pill-btn b{color:var(--green)}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:999px;background:var(--card);overflow:hidden}
+.lang button{border:0;background:none;padding:6px 10px;font-size:12px;font-weight:700;color:var(--muted)}
+.lang button[aria-pressed="true"]{background:var(--green);color:#fff}
+
+.nav{display:flex;border-top:1px solid var(--line);background:var(--card);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav button{flex:1;border:0;background:none;padding:9px 0 7px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--muted)}
+.nav button[aria-current="true"]{color:var(--green)}
+.nav svg{width:22px;height:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
+.status{background:var(--green);color:#fff;border:0;display:flex;flex-direction:column;gap:6px}
+.status h3{font-size:19px;font-weight:800}
+.status p{margin:0;font-size:13px;opacity:.92}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#9CF0BF;margin-right:6px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{padding:12px}
+.stat b{font-family:var(--f-mono);font-size:24px;display:block;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.sec{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:4px 2px 0}
+.row{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border-radius:14px;background:var(--card);border:1px solid var(--line);text-align:left;width:100%}
+.row .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--line);color:var(--muted)}
+.row .tx{min-width:0;flex:1}
+.row .tx b{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.row .tx b small{font-weight:500;color:var(--muted);font-size:11px;white-space:nowrap}
+.row .tx p{margin:2px 0 0;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row.bad{border-color:var(--red);background:var(--red-soft)}
+.row.bad .av{background:var(--red);color:#fff}
+.row.warn{border-color:#E5B13C;background:var(--amber-soft)}
+.row.good .av{background:var(--green-soft);color:var(--green)}
+button.row{cursor:pointer}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;margin-top:4px}
+.tag.red{background:var(--red);color:#fff}
+.tag.green{background:var(--green-soft);color:var(--green)}
+.tag.amber{background:var(--amber-soft);color:var(--amber)}
+.tag.grey{background:var(--line);color:var(--muted)}
+.back{border:0;background:none;display:flex;align-items:center;gap:6px;font-weight:700;color:var(--green);padding:4px 0;width:fit-content}
+.msgbox{padding:14px;border-radius:18px;background:var(--card);border:1px solid var(--line);font-size:14px;overflow-wrap:anywhere}
+.msgbox mark{background:var(--red-soft);color:var(--red);font-weight:700;border-radius:4px;padding:0 2px}
+.vd{border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:9px}
+.vd.scam{background:var(--red-soft);border:1px solid var(--red)}
+.vd.caution{background:var(--amber-soft);border:1px solid #E5B13C}
+.vd.ok{background:var(--green-soft);border:1px solid #A7D9B9}
+.vd h3{font-size:18px;font-weight:800;display:flex;gap:8px;align-items:center}
+.vd.scam h3{color:var(--red)} .vd.caution h3{color:var(--amber)} .vd.ok h3{color:var(--green)}
+.vd ul{margin:0;padding-left:18px;font-size:13.5px;display:flex;flex-direction:column;gap:4px}
+.vd h4{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-family:var(--f-body);font-weight:700}
+.score{font-family:var(--f-mono);font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;background:var(--card);margin-left:auto;color:var(--ink);border:1px solid var(--line)}
+.words{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:10px 14px;font-weight:700;font-size:13px;color:var(--ink)}
+.btn.p{background:var(--green);color:#fff;border-color:var(--green)}
+.btn.r{background:var(--red);color:#fff;border-color:var(--red)}
+.btn.w{flex:1}
+.btn[disabled]{opacity:.55;cursor:default}
+
+.chat{display:flex;flex-direction:column;gap:10px;flex:1}
+.bub{max-width:92%;padding:10px 12px;border-radius:16px;font-size:13.5px;overflow-wrap:anywhere}
+.bub.me{align-self:flex-end;background:var(--green);color:#fff;border-bottom-right-radius:4px}
+.bub.li{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-bottom-left-radius:4px;width:92%}
+.bub.li.plain{width:auto}
+.bub .vd{border:0;padding:0;background:none!important}
+.sugg{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.sugg button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:600;color:var(--ink);text-align:left}
+.askbar{display:flex;gap:8px;padding:8px 12px;border-top:1px solid var(--line);background:var(--card)}
+.askbar input{flex:1;min-width:0;border:1px solid var(--line);border-radius:999px;padding:10px 14px;font:inherit;font-size:14px;background:var(--bg);color:var(--ink)}
+.askbar button{border:0;background:var(--green);color:#fff;border-radius:50%;width:40px;height:40px;display:grid;place-items:center;flex:none}
+
+.layer{display:flex;gap:12px;align-items:flex-start}
+.layer .n{width:28px;height:28px;border-radius:9px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-family:var(--f-mono);font-weight:600;flex:none}
+.layer p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.mstat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mstat div{border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.mstat b{font-family:var(--f-mono);font-size:18px;display:block}
+.mstat span{font-size:11px;color:var(--muted)}
+.fine{font-size:12px;color:var(--muted)}
+a.link{color:var(--green);font-weight:700}
+
+#ov{position:absolute;inset:0;pointer-events:none;z-index:20}
+#ov>*{pointer-events:auto}
+.notif{position:absolute;left:10px;right:10px;top:34px;background:var(--card);color:var(--ink);border-radius:20px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);display:flex;gap:10px;text-align:left;border:0;width:calc(100% - 20px);animation:drop .35s ease}
+.notif .logo{width:30px;height:30px;border-radius:10px;background:var(--red)}
+.notif b{font-size:13px;display:block}
+.notif span{font-size:12.5px;color:var(--muted)}
+@keyframes drop{from{transform:translateY(-30px);opacity:0}to{transform:none;opacity:1}}
+@keyframes rise{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.call{position:absolute;inset:0;background:#0E1812;color:#fff;display:flex;flex-direction:column;align-items:center;padding:52px 22px 26px;gap:10px;text-align:center}
+.call .top{font-size:12px;opacity:.7;letter-spacing:.04em}
+.call .avt{width:92px;height:92px;border-radius:50%;display:grid;place-items:center;margin-top:14px;background:#26332B}
+.call .avt svg{width:40px;height:40px}
+.call h2{font-size:25px;font-weight:800;margin-top:6px}
+.call .num{font-family:var(--f-mono);font-size:14px;opacity:.75}
+.badge{display:inline-flex;gap:6px;align-items:center;border-radius:999px;padding:7px 14px;font-weight:800;font-size:13.5px;margin-top:6px}
+.badge.red{background:var(--red);color:#fff}.badge.green{background:#1FA45E;color:#fff}.badge.amber{background:#E5B13C;color:#2B1E00}.badge.grey{background:#3A4640;color:#fff}
+.call .sub{font-size:13.5px;opacity:.85;max-width:28ch;margin:2px 0 0}
+.call .sp{flex:1}
+.acts{display:flex;justify-content:space-between;width:100%;padding:0 18px;align-items:center}
+.circ{width:68px;height:68px;border-radius:50%;border:0;display:grid;place-items:center;color:#fff}
+.circ.g{background:#1FA45E}.circ.r{background:#D8403A}
+.circ svg{width:28px;height:28px}
+.call .rep{border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:999px;padding:9px 15px;font-weight:700;font-size:13px;margin-bottom:10px}
+.call .rep[disabled]{opacity:.6}
+.ban{border-radius:16px;padding:12px;font-size:13.5px;text-align:left;width:100%;margin-top:10px}
+.ban.red{background:var(--red-soft);color:var(--red)}.ban.green{background:var(--green-soft);color:var(--green)}.ban.amber{background:var(--amber-soft);color:var(--amber)}
+.ban b{display:block;margin-bottom:2px}
+.timer{font-family:var(--f-mono);font-size:15px;opacity:.85}
+.stk{position:absolute;left:18px;right:18px;top:200px;background:#F2F3F2;color:#1A1D1B;border-radius:24px;padding:18px;box-shadow:0 10px 40px rgba(0,0,0,.5);text-align:left;animation:drop .3s ease}
+.stk h4{margin:0 0 6px;font-size:15px;font-weight:700;font-family:var(--f-body)}
+.stk p{margin:0;font-size:14px}
+.stk .pin{margin:12px 0;border-bottom:2px solid #1A1D1B;letter-spacing:8px;font-family:var(--f-mono);height:28px;color:#777}
+.stk .tb{display:flex;justify-content:flex-end;gap:18px;font-weight:700;font-size:14px;color:#1A5C37}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);color:var(--ink);border-radius:26px 26px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:10px;text-align:left;animation:rise .35s ease}
+.sheet h3{font-size:20px;font-weight:800}
+.sheet.red h3{color:var(--red);display:flex;gap:8px;align-items:center}
+.sheet p{margin:0;font-size:14px}
+.scrim{position:absolute;inset:0;background:rgba(10,16,12,.45)}
+.demo-list{display:flex;flex-direction:column;gap:8px}
+.demo-list button{border:1px solid var(--line);background:var(--bg);border-radius:14px;padding:11px 12px;text-align:left;font-weight:600;font-size:14px;display:flex;gap:10px;align-items:center}
+.demo-list button b{font-family:var(--f-mono);color:var(--green);font-size:12px}
+.toast{position:absolute;left:18px;right:18px;bottom:78px;background:#17211B;color:#fff;border-radius:14px;padding:11px 14px;font-size:13px;font-weight:600;text-align:center;animation:rise .25s ease;z-index:30}
+.tag.blue{background:#E1ECFA;color:#1A5FB4}
+.badge.blue{background:#2B6CC4;color:#fff}
+.row.sos{border-color:var(--red);background:var(--red-soft)}
+.row.sos .av{background:var(--red);color:#fff}
+.row.sos .tx p{white-space:normal}
+.btn.sos{background:var(--red);color:#fff;border-color:var(--red);width:100%;display:flex;gap:8px;align-items:center;justify-content:center;padding:11px 14px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.opts button{border:1px solid var(--green);background:var(--card);color:var(--green);border-radius:999px;padding:8px 13px;font-weight:700;font-size:13px;text-align:left}
+.opts button:hover{background:var(--green-soft)}
+.opts button.skip{border-color:var(--line);color:var(--muted)}
+.bub.li.err{border-color:#E5B13C;background:var(--amber-soft)}
+.steps{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:24px 1fr;gap:10px;counter-increment:s}
+.steps li::before{content:counter(s);width:24px;height:24px;border-radius:8px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-family:var(--f-mono);font-size:12px;font-weight:600}
+.steps b{font-size:13.5px;display:block}
+.steps small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.res h3{font-size:16px;font-weight:800;margin:2px 0 0}
+.res .urgent{background:var(--red-soft);color:var(--red);border-radius:12px;padding:9px 11px;font-size:13px;font-weight:600}
+.res .cov{background:var(--amber-soft);color:var(--amber);border-radius:12px;padding:9px 11px;font-size:12.5px}
+.report{margin:6px 0 0;padding:10px 12px;border-radius:12px;background:var(--bg);border:1px solid var(--line);font-family:var(--f-mono);font-size:11.5px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;user-select:text;-webkit-user-select:text}
+.sheet{max-height:88%;overflow-y:auto}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+
+<div class="app" id="app">
+  <div class="sbfake"><span id="clk">4:52 PM</span><i></i><span>86%</span></div>
+  <div class="view" id="view"></div>
+  <nav class="nav" id="nav"></nav>
+  <div id="ov"></div>
+</div>
+<div class="below">Prototype for presentation. Numbers are made up. Open the <a href="dashboard.html">fraud-team console</a> in another tab to see reports arrive.</div>
+
+<script>
+/* Linda scam model: a small naive Bayes text classifier plus plain-language rules.
+   The training messages below are written by us (synthetic), in English, Swahili and Sheng.
+   They are NOT Safaricom data. In production this would be trained on confirmed reports. */
+var LindaModel = (function () {
+  var S = 1, L = 0;
+  var DATA = [
+    /* ---- scam: English ---- */
+    [S, "Confirmed. You have received Ksh 8,500.00 from JOHN KAMAU 0711000412. Sorry I sent it to the wrong number, please reverse it urgently."],
+    [S, "Hello I mistakenly sent you Ksh 3,000 on M-PESA. Kindly return it to this number, I am in an emergency."],
+    [S, "CONGRATULATIONS! You have won Ksh 100,000 in the Safaricom Mega Promo. Send your M-PESA PIN to claim your prize."],
+    [S, "KRA: You have a tax refund of Ksh 12,400. Claim now at kra-refund-claim.co.ke before it expires today."],
+    [S, "Your M-PESA account has been suspended. Click http://mpesa-verify.top to confirm your PIN within 24 hours."],
+    [S, "Dear customer, we detected unusual activity. Reply with your M-PESA PIN and ID number to restore your account."],
+    [S, "HELB: Your loan of Ksh 45,000 is approved. Pay a processing fee of Ksh 1,500 to 0733111222 to receive funds."],
+    [S, "Get an instant loan of Ksh 50,000 without CRB check. Send Ksh 800 insurance fee first to 0722333444."],
+    [S, "We are hiring! Work from home and earn Ksh 5,000 per day. Pay registration fee Ksh 1,000 to apply."],
+    [S, "Safaricom: you have won a free Toyota. Call 0700123456 now and send Ksh 500 to confirm delivery."],
+    [S, "Invest Ksh 5,000 and receive Ksh 20,000 in 24 hours guaranteed. Send to 0745999888 now."],
+    [S, "Your SIM will be blocked in 2 hours. Share the OTP sent to your phone to verify your identity."],
+    [S, "Hi, this is Safaricom customer care. Your account has a problem, please give me the code you just received."],
+    [S, "Landlord notice: change of rent payment number. Send this month's rent to the new number 0711555666 immediately."],
+    [S, "URGENT: Your KRA PIN will be deactivated. Update your details at kra-update.info today."],
+    [S, "You have been selected for the Ksh 250,000 Youth Fund grant. Send Ksh 300 processing fee to receive your money."],
+    [S, "M-PESA reversal: Please send back Ksh 2,000 sent to your number by mistake. Reply fast, I am stranded."],
+    [S, "Your ATM card is blocked. Click bit.ly/3xK9 to unlock and enter your PIN."],
+    [S, "Dear customer your Fuliza limit has been increased. Pay Ksh 500 activation fee to 0722000111 to enjoy."],
+    [S, "Congrats, your number won in the bonus draw. Reply with your ID and PIN to collect Ksh 75,000."],
+    [S, "Dear Customer, your Safaricom line will be disconnected. Update your KYC now by sending your ID and PIN."],
+    [S, "Ksh 15,000 has been sent to your M-PESA by mistake. Return the funds to avoid legal action, act now."],
+    [S, "Final warning: your parcel is held at customs. Pay Ksh 350 clearance fee at link.parcel-ke.xyz to release it."],
+    [S, "Earn Ksh 10,000 daily with crypto trading. Deposit Ksh 2,000 now and withdraw double in one hour."],
+    [S, "Hi, it's Brian. I lost my phone, this is my new number. Please send Ksh 3,500 urgently, I will pay you back tonight."],
+    [S, "Hello this is your son, I changed my number. Send me Ksh 5,000 quickly for school fees."],
+    [S, "Mum nimepoteza simu, hii ni namba yangu mpya. Tuma pesa ya dharura Ksh 2,000 kwa namba hii."],
+    /* ---- scam: Swahili ---- */
+    [S, "Nimetuma pesa kwa namba yako kimakosa, tafadhali rudisha Ksh 5,000 haraka, nina dharura."],
+    [S, "Hongera! Umeshinda Ksh 200,000 kwenye promosheni ya Safaricom. Tuma namba yako ya siri ili kupokea zawadi."],
+    [S, "Akaunti yako ya M-PESA imefungwa. Bonyeza kiungo hiki ili kuthibitisha PIN yako leo."],
+    [S, "Pata mkopo wa Ksh 30,000 bila CRB. Lipa ada ya Ksh 700 kwanza kwa namba 0733222111."],
+    [S, "Kazi inapatikana, lipa ada ya usajili Ksh 1,000 kisha uanze kupata Ksh 4,000 kila siku."],
+    [S, "Samahani nilituma pesa kwa namba isiyo sahihi. Tafadhali nirudishie Ksh 1,800 sasa hivi."],
+    [S, "KRA: Una marejesho ya kodi ya Ksh 9,000. Fungua kiungo hiki kabla muda haujaisha leo."],
+    [S, "Safaricom: tunahitaji uthibitishe akaunti yako. Tuma nambari ya siri na kitambulisho chako sasa."],
+    /* ---- scam: Sheng ---- */
+    [S, "Bro nimekutumia pesa kwa bahati mbaya, rudisha 2k fiti, niko kwa shida."],
+    [S, "Mambo? Umeshinda 150k kwa promo ya Safaricom, tuma PIN yako upate pesa yako leo."],
+    [S, "Mkopo wa haraka 20k bila CRB, tuma 500 ya ada kwanza kisha upokee pesa mara moja."],
+    [S, "Umechaguliwa kwa job ya remote, lipa 1k ya form uanze kupata 3k kila siku."],
+    [S, "Sasa boss tuma hiyo pesa ya rent kwa namba mpya 0711777888 haraka ata leo."],
+    [S, "Account yako ya mpesa imeblock, click link hii ujaze PIN yako uirudishe."],
+    [S, "Boss nimetuma 4k kimakosa, tafadhali rudisha, naomba usinipotezee muda."],
+    [S, "Safaricom promo: umeshinda iPhone, tuma 600 ya delivery kwa 0745123123 ulete."],
+    /* ---- normal: English ---- */
+    [L, "TJK4M9X2QA Confirmed. Ksh 350.00 paid to Naivas Westlands on 26/10/26 at 4:48 PM. New M-PESA balance is Ksh 2,140.50."],
+    [L, "Confirmed. You have received Ksh 1,500.00 from JANE WANJIRU 0722000123 on 26/10/26. New M-PESA balance is Ksh 3,640.50."],
+    [L, "TJK9L2QWE1 Confirmed. Ksh 200.00 sent to Mama Mboga 0733000321 on 26/10/26. Transaction cost Ksh 7.00."],
+    [L, "You have bought 1GB data bundle valid for 24 hours. Dial *544# to check your balance."],
+    [L, "Your Fuliza limit is Ksh 5,000. Outstanding Fuliza amount is Ksh 0. Repay on time to keep your limit."],
+    [L, "Thank you for paying your KPLC token. Your units are 12.4. Token: 1234 5678 9012 3456."],
+    [L, "Hi, are we still meeting at 6pm at the mall today?"],
+    [L, "Your parcel from Jumia has been dispatched and will arrive tomorrow between 10am and 2pm."],
+    [L, "Equity Bank: Ksh 5,000 has been debited from your account ending 4521 at Quickmart. Available balance Ksh 12,300."],
+    [L, "Reminder: your appointment at the clinic is on Friday at 9am. Reply YES to confirm."],
+    [L, "Safaricom: Your monthly bundle has been renewed. Dial *544# to check your balance. Never share your PIN with anyone."],
+    [L, "Mum, I reached home safely. Will call you later tonight."],
+    [L, "The meeting has been moved to Thursday at 10am in the boardroom. Please confirm attendance."],
+    [L, "Your Uber trip is complete. Total fare Ksh 480. Thank you for riding."],
+    [L, "School fees payment of Ksh 15,000 received for Mary Njeri. Thank you."],
+    [L, "Your M-PESA statement for October is attached. The password is sent separately. Never share your PIN with anyone."],
+    [L, "Thanks for banking with us. Your loan repayment of Ksh 3,000 has been received. Balance Ksh 27,000."],
+    [L, "Happy birthday! Hope you have a wonderful day, let's catch up this weekend."],
+    [L, "You have received 20 free minutes valid until midnight. Enjoy."],
+    [L, "TKM2P7ZQ88 Confirmed. Ksh 1,000.00 withdrawn from agent 345678 Westlands on 26/10/26."],
+    [L, "Your electricity bill for October is Ksh 2,450 due on 5 November. Pay via M-PESA paybill 888880."],
+    [L, "Dear customer, your SIM swap request was successful. If you did not request this, call 100 immediately."],
+    [L, "Your order has been delivered. Rate your experience and get a discount on your next order."],
+    [L, "Salary for October has been credited to your account. Net pay Ksh 55,200. Statement available in the app."],
+    [L, "Hi, it's Brian. I will be late, the meeting starts at 10."],
+    [L, "Hi it's Brian, are we still on for lunch tomorrow?"],
+    [L, "Mum, hii ni nambari yangu ya kazi, nitaipiga baadaye."],
+    /* ---- normal: Swahili ---- */
+    [L, "Habari, nimefika. Niko nje ya geti, nifungulie tafadhali."],
+    [L, "Kikao kimeahirishwa hadi kesho saa nne asubuhi. Tafadhali thibitisha kuhudhuria."],
+    [L, "Asante kwa kununua bundles. Una MB 1000 zinazotumika hadi saa sita usiku."],
+    [L, "Mama anaomba umpigie simu ukipata nafasi. Hakuna dharura, anataka kusalimia tu."],
+    [L, "Karibu Safaricom. Salio lako la M-PESA ni Ksh 2,300. Usishiriki PIN yako na yeyote."],
+    [L, "Tutaonana kesho kanisani saa tatu asubuhi. Mungu akubariki."],
+    [L, "Malipo yako ya umeme yamepokelewa. Asante kwa kutumia KPLC."],
+    [L, "Nimekutumia ile pesa ya nauli kupitia M-PESA, angalia simu yako."],
+    /* ---- normal: Sheng ---- */
+    [L, "Niko njiani bro, nitafika baada ya dakika 20. Tuko poa."],
+    [L, "Umefika nyumbani? Tuma text ukifika, usisahau kuniambia kama kuko poa."],
+    [L, "Msee tutakutana wapi leo, ni saa ngapi tuanze mechi?"],
+    [L, "Nimekutumia 500 ya lunch, enda ule vizuri. Tuko pamoja."],
+    [L, "Mambo bro, game ya leo ni saa kumi na mbili, usichelewe."],
+    [L, "Rent ya mwezi huu nimelipa kwa landlord kama kawaida, receipt ninaiweka kwa group."],
+    [L, "Nimepata kazi mpya! Tutaongea jioni nikifika nyumbani nikueleze yote."],
+    [L, "Safaricom: Umenunua dakika 50 za kupiga simu zinazotumika kwa siku 7. Asante."]
+  ];
+
+  /* ---------- text to features ---------- */
+  function tokens(text) {
+    var t = String(text).toLowerCase();
+    t = t.replace(/https?:\/\/\S+|www\.\S+|\b[a-z0-9-]+(\.[a-z0-9-]+)*\.(co\.ke|com|net|org|info|xyz|top|link|ke)\b\S*|\bbit\.ly\S*/g, " urlx ");
+    t = t.replace(/(\+?254|\b0)[17]\d{2}[\s-]?\d{3}[\s-]?\d{3}\b/g, " phonex ");
+    t = t.replace(/\b[a-z]{3}\d[a-z0-9]{5,7}\b/g, " codex ");
+    t = t.replace(/\d[\d,]*(\.\d+)?k?/g, " numx ");
+    var w = t.split(/[^a-z']+/).filter(function (x) { return x.length > 1 || x === "k"; });
+    var out = w.slice(), i;
+    for (i = 0; i < w.length - 1; i++) out.push(w[i] + "_" + w[i + 1]);
+    return out;
+  }
+
+  /* ---------- naive Bayes ---------- */
+  function train(rows) {
+    var m = { c: [{}, {}], n: [0, 0], docs: [0, 0], vocab: {} }, i, j, f;
+    for (i = 0; i < rows.length; i++) {
+      var y = rows[i][0], fs = tokens(rows[i][1]);
+      m.docs[y]++;
+      for (j = 0; j < fs.length; j++) {
+        f = fs[j]; m.c[y][f] = (m.c[y][f] || 0) + 1; m.n[y]++; m.vocab[f] = 1;
+      }
+    }
+    m.v = Object.keys(m.vocab).length;
+    return m;
+  }
+  function logp(m, y, f) { return Math.log(((m.c[y][f] || 0) + 1) / (m.n[y] + m.v)); }
+  function prob(m, text) {
+    /* Start from a cautious prior: most real messages are not scams. Words never seen in training are ignored. */
+    var fs = tokens(text), z = -1.6, i, known = 0;
+    for (i = 0; i < fs.length; i++) {
+      if (!m.vocab[fs[i]]) continue;
+      known++; z += logp(m, S, fs[i]) - logp(m, L, fs[i]);
+    }
+    /* naive Bayes is overconfident, so soften the score before turning it into a probability */
+    var k = 1 / Math.max(2.5, Math.sqrt(known));
+    return 1 / (1 + Math.exp(-z * k));
+  }
+  var STOP = { to:1, it:1, by:1, the:1, of:1, you:1, your:1, and:1, is:1, in:1, for:1, on:1, a:1, an:1, be:1, are:1, we:1, i:1, me:1, my:1, ya:1, na:1, kwa:1, wa:1, hii:1, yako:1, number:1, have:1, has:1, with:1, this:1, that:1, will:1, at:1, from:1, so:1, can:1, please:1 };
+  function topWords(m, text, n) {
+    var fs = tokens(text), seen = {}, arr = [], i, f, d;
+    for (i = 0; i < fs.length; i++) {
+      f = fs[i];
+      if (seen[f] || STOP[f] || f.indexOf("_") > -1 || /^(url|phone|code|num)x$/.test(f)) continue;
+      seen[f] = 1; d = logp(m, S, f) - logp(m, L, f);
+      if (d > 0.9 && (m.c[S][f] || 0) >= 2) arr.push([f, d]);
+    }
+    arr.sort(function (a, b) { return b[1] - a[1]; });
+    return arr.slice(0, n || 4).map(function (a) { return a[0]; });
+  }
+  function crossVal(rows, k) {
+    var ok = 0, i, tr, te;
+    for (var fold = 0; fold < k; fold++) {
+      tr = []; te = [];
+      for (i = 0; i < rows.length; i++) (i % k === fold ? te : tr).push(rows[i]);
+      var m = train(tr);
+      for (i = 0; i < te.length; i++) if ((prob(m, te[i][1]) >= 0.5 ? 1 : 0) === te[i][0]) ok++;
+    }
+    return ok / rows.length;
+  }
+
+  var MODEL = train(DATA);
+  var STATS = (function () {
+    var s = 0, l = 0, i;
+    for (i = 0; i < DATA.length; i++) DATA[i][0] ? s++ : l++;
+    return { total: DATA.length, scam: s, ok: l, features: MODEL.v, cv: crossVal(DATA, 5) };
+  })();
+
+  /* ---------- plain-language rules (explain the verdict) ---------- */
+  var RULES = [
+    ["pin", function (t) {
+      return /\b(pin|otp|password|nambari ya siri|namba ya siri|code|msimbo)\b/.test(t) &&
+        /\b(send|share|give|reply|enter|tuma|toa|weka|ujaze|thibitisha|confirm|click|bonyeza)\b/.test(t) &&
+        !/(never share|do not share|don't share|usishiriki|usimpe)/.test(t);
+    }],
+    ["reversal", function (t) {
+      return /(revers|wrong number|by mistake|mistakenly|kimakosa|kwa bahati mbaya|rudisha|nirudishie|send back|return (it|the)|isiyo sahihi)/.test(t);
+    }],
+    ["fee", function (t) {
+      return /(fee|ada ya|ada\b|processing|registration|usajili|insurance|clearance|activation|delivery)/.test(t) &&
+        /\b(pay|send|lipa|tuma|deposit)\b/.test(t);
+    }],
+    ["prize", function (t) { return /(you have won|you won|congrat|hongera|umeshinda|won in|mega promo|bonus draw|selected for)/.test(t); }],
+    ["link", function (t) { return /(https?:\/\/|www\.|bit\.ly|\.top\b|\.xyz\b|\.info\b|[a-z]-[a-z-]+\.co\.ke|kiungo|link hii|click)/.test(t); }],
+    ["urgent", function (t) { return /(urgent|immediately|expires today|before it expires|within 24 hours|in 2 hours|haraka|sasa hivi|act now|final warning|ata leo|kabla muda)/.test(t); }],
+    ["newcontact", function (t) {
+      return /(my new number|this is my new number|i changed my number|changed my number|lost my phone|namba yangu mpya|nambari yangu mpya|nimepoteza simu)/.test(t);
+    }],
+    ["newnumber", function (t) {
+      return /(namba mpya ya|nambari mpya ya|change of .*number|new (payment )?number|send .{0,40}to (the )?new number|tuma .{0,40}namba mpya)/.test(t) &&
+        !/(this is my new number|my new number|namba yangu mpya|nambari yangu mpya)/.test(t);
+    }]
+  ];
+  var VERIFIED_SENDERS = ["MPESA", "M-PESA", "SAFARICOM", "SAFARICOM1"];
+
+  var TEXT = {
+    reasons: {
+      list:      { en: "{n} is on Safaricom's confirmed fraud list ({c} reports).", sw: "{n} iko kwenye orodha ya Safaricom ya ulaghai uliothibitishwa (ripoti {c})." },
+      pending:   { en: "{n} was reported by {c} customers and is under review.", sw: "{n} imeripotiwa na wateja {c} na inakaguliwa." },
+      pin:       { en: "It asks for your PIN or a code. Safaricom never does.", sw: "Inaomba PIN au msimbo wako. Safaricom haifanyi hivyo kamwe." },
+      reversal:  { en: "It asks you to send money back. This is the reversal scam.", sw: "Inakuomba urudishe pesa. Huu ni ulaghai wa kurudisha pesa." },
+      fee:       { en: "It asks for a fee before you get a loan, job or prize.", sw: "Inaomba ada kabla ya kupata mkopo, kazi au zawadi." },
+      prize:     { en: "It says you won something you never entered.", sw: "Inasema umeshinda kitu ambacho hukushiriki." },
+      link:      { en: "It has a link that is not an official Safaricom or KRA address.", sw: "Ina kiungo ambacho si anwani rasmi ya Safaricom au KRA." },
+      urgent:    { en: "It pushes you to act fast so you do not check.", sw: "Inakusukuma kuchukua hatua haraka bila kuthibitisha." },
+      newnumber: { en: "It asks you to pay a new number, not the one you know.", sw: "Inakuambia ulipe namba mpya, si ile unayoijua." },
+      sender:    { en: "The sender is not a verified Safaricom sender ID.", sw: "Mtumaji si kitambulisho rasmi cha Safaricom." },
+      model:     { en: "Linda's model finds the wording close to known scams.", sw: "Modeli ya Linda inaona maneno yanafanana na ulaghai unaojulikana." },
+      newcontact:{ en: "It says it is someone you know on a new number. Scammers copy this trick to ask for money.", sw: "Inasema ni mtu unayemjua kwa namba mpya. Matapeli hutumia mbinu hii kuomba pesa." },
+      impersonation:{ en: "It says it is from {name}, but {name} is saved with a different number ({n}).", sw: "Inasema ni kutoka kwa {name}, lakini {name} amehifadhiwa kwa namba tofauti ({n})." },
+      unknownnum:{ en: "No reports about this number yet. Linda cannot confirm who it is.", sw: "Hakuna ripoti kuhusu namba hii bado. Linda haiwezi kuthibitisha ni nani." },
+      vernum:    { en: "This number is verified by Safaricom.", sw: "Namba hii imethibitishwa na Safaricom." }
+    },
+    steps: {
+      nosend:  { en: "Do not send money or reply.", sw: "Usitume pesa wala kujibu." },
+      nopin:   { en: "Never share your PIN or any code.", sw: "Usishiriki PIN wala msimbo wowote." },
+      fwd333:  { en: "Forward it to 333 so Safaricom can act.", sw: "Itume kwa 333 ili Safaricom ichukue hatua." },
+      block:   { en: "Block the sender.", sw: "Mzuie mtumaji." },
+      balance: { en: "Check your real balance with *334#.", sw: "Angalia salio lako halisi kwa *334#." },
+      nolink:  { en: "Do not open the link. Use the official app or site.", sw: "Usifungue kiungo. Tumia programu au tovuti rasmi." },
+      verify:  { en: "Verify through 100 or *234# before you act.", sw: "Thibitisha kupitia 100 au *234# kabla ya kuchukua hatua." },
+      careful: { en: "Still check the name and amount before you pay.", sw: "Bado angalia jina na kiasi kabla ya kulipa." },
+      callsaved:{ en: "Call the person on the number you already have saved before you send anything.", sw: "Mpigie mtu huyo kwa namba uliyonayo tayari kabla ya kutuma chochote." }
+    }
+  };
+
+  /* ---------- scan: combine Safaricom list + rules + model ---------- */
+  function normNum(n) { return String(n).replace(/[^0-9]/g, "").replace(/^254/, "0"); }
+  function lookupNumber(db, num) {
+    var want = normNum(num), k;
+    for (k in db) if (normNum(k) === want) return { key: k, rec: db[k] };
+    return null;
+  }
+  function scan(text, opts) {
+    opts = opts || {}; var db = opts.db || {}, t = String(text).toLowerCase();
+    var p = prob(MODEL, text), reasons = [], steps = {}, r, i, hit = null;
+    var senderIsVerified = opts.sender && VERIFIED_SENDERS.indexOf(String(opts.sender).toUpperCase()) > -1;
+    if (opts.sender) hit = lookupNumber(db, opts.sender);
+    if (hit && hit.rec.status === "confirmed") { reasons.push({ k: "list", n: hit.key, c: hit.rec.count }); p = Math.max(p, 0.99); }
+    else if (hit && hit.rec.status === "pending") { reasons.push({ k: "pending", n: hit.key, c: hit.rec.count }); p = Math.max(p, 0.7); }
+    var phones = String(text).match(/(\+?254|\b0)[17]\d{2}[\s-]?\d{3}[\s-]?\d{3}/g) || [];
+    for (i = 0; i < phones.length; i++) {
+      var h2 = lookupNumber(db, phones[i]);
+      if (h2 && h2.rec.status === "confirmed" && !hit) { reasons.push({ k: "list", n: h2.key, c: h2.rec.count }); p = Math.max(p, 0.97); break; }
+    }
+    var contacts = opts.contacts || [], senderSaved = false, ci2, imp = null;
+    for (ci2 = 0; ci2 < contacts.length; ci2++) if (opts.sender && normNum(contacts[ci2].n) === normNum(opts.sender)) senderSaved = true;
+    var asksMoney = /(send|tuma|lipa|pay|deposit).{0,50}(ksh|kes|\d+\s?k\b|\d{3,})|(ksh|kes)\s?\d/.test(t);
+    if (opts.sender && !senderSaved && !senderIsVerified) {
+      for (ci2 = 0; ci2 < contacts.length && !imp; ci2++) {
+        var first = String(contacts[ci2].name).toLowerCase().replace(/\(.*?\)/g, "").trim().split(/\s+/)[0];
+        if (first && new RegExp("(it's|it is|this is|i am|i'm|ni|mimi ni)\\s+" + first + "\\b").test(t)) imp = contacts[ci2];
+      }
+    }
+    var fired = 0, strong = false;
+    for (i = 0; i < RULES.length; i++) if (RULES[i][1](t)) {
+      fired++; reasons.push({ k: RULES[i][0] });
+      if (/^(pin|reversal|fee|prize|newnumber)$/.test(RULES[i][0])) strong = true;
+    }
+    if (imp) {
+      reasons.unshift({ k: "impersonation", name: imp.name, n: imp.n });
+      p = Math.max(p, asksMoney ? 0.88 : 0.55); strong = true;
+    } else if (opts.sender && !senderSaved && !senderIsVerified && reasons.some(function (x) { return x.k === "newcontact"; })) {
+      p = asksMoney ? Math.max(p, 0.82) : Math.min(Math.max(p, 0.5), 0.62);
+    }
+    if (opts.sender && !senderIsVerified && p >= 0.5 && /[a-z]/i.test(opts.sender)) reasons.push({ k: "sender" });
+    if (fired >= 2 && p < 0.75) p = Math.max(p, 0.75);
+    else if (fired === 1 && p < 0.5 && !senderIsVerified && strong) p = Math.max(p, 0.5);
+    if (senderIsVerified && fired === 0) p = Math.min(p, 0.1);
+    var level = p >= 0.75 ? "scam" : p >= 0.45 ? "caution" : "ok";
+    var words = level === "ok" ? [] : topWords(MODEL, text, 4);
+    if (level !== "ok" && !reasons.length) reasons.push({ k: "model" });
+    var ks = reasons.map(function (x) { return x.k; });
+    if (level !== "ok") {
+      if (ks.indexOf("pin") > -1 || ks.indexOf("prize") > -1 || ks.indexOf("fee") > -1) steps.nopin = 1;
+      steps.nosend = 1;
+      if (ks.indexOf("reversal") > -1) steps.balance = 1;
+      if (ks.indexOf("impersonation") > -1 || ks.indexOf("newcontact") > -1) steps.callsaved = 1;
+      if (ks.indexOf("link") > -1) steps.nolink = 1;
+      steps.fwd333 = 1; if (opts.sender) steps.block = 1;
+      if (level === "caution") steps.verify = 1;
+    } else steps.careful = 1;
+    return { score: Math.round(p * 100), level: level, reasons: reasons.slice(0, 4), words: words, steps: Object.keys(steps) };
+  }
+  function fill(tpl, r) { return tpl.split("{n}").join(r.n || "").split("{c}").join(r.c || "").split("{name}").join(r.name || ""); }
+  function reasonText(r, lang) { return fill(TEXT.reasons[r.k][lang], r); }
+  function stepText(k, lang) { return TEXT.steps[k][lang]; }
+
+  var api = { scan: scan, prob: function (t) { return prob(MODEL, t); }, stats: STATS, data: DATA, TEXT: TEXT,
+              reasonText: reasonText, stepText: stepText, lookupNumber: lookupNumber, normNum: normNum, tokens: tokens,
+              _train: train, _prob: prob, _cv: crossVal };
+  return api;
+})();
+if (typeof module !== "undefined") module.exports = LindaModel;
+
+/* Shared demo state. The Linda app and the fraud-team console read and write the same record,
+   so a report sent in the app shows up in the console, and a confirmation in the console
+   reaches the app. Works between pages of the same site on the same device. */
+var Shared = (function () {
+  var KEY = "linda_shared_v1", mem = null, ch = null;
+  try { ch = new BroadcastChannel("linda"); } catch (e) { ch = null; }
+
+  function seed() {
+    var now = Date.now(), m = 60000;
+    return {
+      rev: 1, syncedAt: now - 4 * m, cases: [],
+      db: {
+        "0711 000 412": { status: "confirmed", type: "reversal", count: 214, name: "" },
+        "0733 000 905": { status: "confirmed", type: "prize", count: 87, name: "" },
+        "0722 000 318": { status: "pending", type: "kra", count: 12, name: "" },
+        "100": { status: "verified", type: "verified", count: 0, name: "Safaricom Customer Care" }
+      },
+      feed: [
+        { t: now - 21 * m, x: "0722 000 318 reported by 12 customers. Waiting for review." },
+        { t: now - 40 * m, x: "0733 000 905 confirmed and blocked at network level." }
+      ]
+    };
+  }
+  function load() {
+    var s = null;
+    try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) { s = null; }
+    if (!s || !s.db) s = mem || seed();
+    mem = s; return s;
+  }
+  function save(s) {
+    s.rev = (s.rev || 0) + 1; mem = s;
+    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {}
+    try { if (ch) ch.postMessage("u"); } catch (e) {}
+    return s;
+  }
+  function onChange(fn) {
+    window.addEventListener("storage", function (e) { if (e.key === KEY) fn(load()); });
+    if (ch) ch.onmessage = function () { fn(load()); };
+  }
+  function norm(n) { return String(n).replace(/[^0-9]/g, "").replace(/^254/, "0"); }
+  function findKey(db, n) {
+    var w = norm(n), k;
+    for (k in db) if (norm(k) === w) return k;
+    return null;
+  }
+  function report(n, type) {
+    var s = load(), k = findKey(s.db, n) || n, d = s.db[k];
+    if (d && d.status !== "verified") { d.count++; d.lastAt = Date.now(); }
+    else if (!d) { s.db[k] = { status: "pending", type: type || "other", count: 1, name: "", fresh: true, lastAt: Date.now() }; }
+    s.feed.unshift({ t: Date.now(), x: "Customer report for " + k + "." });
+    return save(s);
+  }
+  function confirm(n) {
+    var s = load(), d = s.db[n]; if (!d) return s;
+    d.status = "confirmed"; d.fresh = false; s.syncedAt = Date.now();
+    s.feed.unshift({ t: Date.now(), x: n + " confirmed and blocked at network level. Sent to every Linda phone." });
+    return save(s);
+  }
+  function addCase(c) {
+    var s = load(); s.cases = s.cases || []; c.t = Date.now(); s.cases.unshift(c);
+    s.feed.unshift({ t: c.t, x: "New scam case " + c.ref + " (" + c.type + (c.amount ? ", KSh " + c.amount : "") + ")." });
+    return save(s);
+  }
+  function reset() { mem = null; try { localStorage.removeItem(KEY); } catch (e) {} var s = seed(); return save(s); }
+  function fmtTime(ts) {
+    var d = new Date(ts), h = d.getHours(), m = d.getMinutes(), ap = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12; return h + ":" + (m < 10 ? "0" + m : m) + " " + ap;
+  }
+  return { load: load, save: save, onChange: onChange, report: report, confirm: confirm, addCase: addCase, reset: reset, fmtTime: fmtTime, findKey: findKey };
+})();
+
+/* "I've been scammed" guided flow: questions, M-PESA message reading, next steps and the short report.
+   Pure functions, no screen code. Contact details below were checked against Safaricom's and Airtel's own pages
+   (333 for scam reports, 456 for reversal requests, *100# > Report Fraud on Airtel, police on 999).
+   The app tells people to confirm numbers on the official sites before calling. */
+var LindaFlow = (function () {
+  var KINDS = {
+    mpesa: { en: "I sent money by M-PESA", sw: "Nilituma pesa kwa M-PESA", label: "Sent money to a scammer by M-PESA" },
+    code: { en: "I shared my PIN or a code", sw: "Nilitoa PIN au msimbo", label: "Shared a PIN or one-time code" },
+    bank: { en: "My bank account or card", sw: "Akaunti yangu ya benki au kadi", label: "Bank account or card fraud" },
+    other: { en: "Airtel or another network", sw: "Airtel au mtandao mwingine", label: "Fraud on another mobile network" },
+    sim: { en: "My SIM or line was taken over", sw: "SIM au laini yangu imechukuliwa", label: "SIM swap or line takeover" }
+  };
+  var WHEN = { now: ["Just now", "Sasa hivi"], today: ["Today", "Leo"], yday: ["Yesterday", "Jana"], earlier: ["Earlier", "Kabla ya hapo"] };
+  var VIA = { call: ["Phone call", "Simu"], sms: ["SMS", "SMS"], chat: ["WhatsApp or social media", "WhatsApp au mitandao ya kijamii"], other: ["Other", "Nyingine"] };
+  var NET = { airtel: ["Airtel", "Airtel"], telkom: ["Telkom", "Telkom"], other: ["Other network", "Mtandao mwingine"] };
+  var YN = { yes: ["Yes", "Ndiyo"], no: ["No", "Hapana"], unsure: ["Not sure", "Sina uhakika"] };
+
+  function opts(map) { return Object.keys(map).map(function (k) { return { v: k, en: map[k][0], sw: map[k][1] }; }); }
+  function kindOpts() { return Object.keys(KINDS).map(function (k) { return { v: k, en: KINDS[k].en, sw: KINDS[k].sw }; }); }
+
+  /* ---------- reading an M-PESA message ---------- */
+  function extract(text) {
+    var s = String(text), up = s.toUpperCase(), out = {}, m;
+    m = up.match(/\b(?=[A-Z0-9]*\d)(?=[A-Z0-9]*[A-Z])[A-Z0-9]{10}\b/); if (m) out.code = m[0];
+    m = s.match(/ksh\.?\s?([\d,]+(?:\.\d{1,2})?)/i); if (m) out.amount = Math.round(parseFloat(m[1].replace(/,/g, "")));
+    m = s.match(/(?:sent to|paid to)\s+(.+?)\s+(?:on|for)\s+\d/i); if (m) out.recipient = m[1].replace(/\s+/g, " ").trim().slice(0, 60);
+    m = s.match(/(?:\+?254|\b0)[17]\d{2}[\s-]?\d{3}[\s-]?\d{3}/); if (m) out.number = prettyNum(m[0]);
+    return out;
+  }
+  function prettyNum(n) {
+    var d = String(n).replace(/[^0-9]/g, "").replace(/^254/, "0");
+    return d.length === 10 ? d.slice(0, 4) + " " + d.slice(4, 7) + " " + d.slice(7) : String(n).trim();
+  }
+  function parseAmount(text) {
+    var m = String(text).trim().toLowerCase().replace(/ksh\.?|kes|,|\s/g, "").match(/^(\d+(?:\.\d+)?)(k?)$/);
+    if (!m) return null; var v = parseFloat(m[1]) * (m[2] ? 1000 : 1);
+    return v > 0 ? Math.round(v) : null;
+  }
+
+  /* ---------- the questions ---------- */
+  var STEPS = [
+    { id: "kind", type: "choice", q: { en: "What happened?", sw: "Nini kilitokea?" }, options: kindOpts, when: function () { return true; } },
+    { id: "lost", type: "choice", q: { en: "Has money left your account?", sw: "Pesa zimetoka kwenye akaunti yako?" }, options: function () { return opts(YN); },
+      when: function (d) { return d.kind === "code" || d.kind === "bank" || d.kind === "other"; } },
+    { id: "code", type: "text", optional: true,
+      q: { en: "Paste the M-PESA confirmation message, or type the 10-character transaction code (letters and numbers, like TJK8W2LP91).", sw: "Bandika ujumbe wa uthibitisho wa M-PESA, au andika msimbo wa muamala wa herufi 10 (herufi na namba, kama TJK8W2LP91)." },
+      ph: { en: "Paste the M-PESA message or type the code", sw: "Bandika ujumbe wa M-PESA au andika msimbo" },
+      err: { en: "I could not find a 10-character code. It has letters and numbers, like TJK8W2LP91. Check the message or tap Skip.", sw: "Sikuweza kupata msimbo wa herufi 10. Una herufi na namba, kama TJK8W2LP91. Angalia ujumbe au gusa Ruka." },
+      when: function (d) { return d.kind === "mpesa" || (d.kind === "code" && d.lost === "yes"); },
+      parse: function (text) { var e = extract(text); return e.code ? { value: e.code, extra: e } : null; } },
+    { id: "net", type: "choice", q: { en: "Which network?", sw: "Mtandao gani?" }, options: function () { return opts(NET); }, when: function (d) { return d.kind === "other"; } },
+    { id: "bank", type: "text", optional: true, q: { en: "Which bank?", sw: "Benki gani?" }, ph: { en: "Bank name", sw: "Jina la benki" },
+      when: function (d) { return d.kind === "bank"; }, parse: function (text) { var v = String(text).trim().slice(0, 40); return v ? { value: v } : null; },
+      err: { en: "Type the bank name or tap Skip.", sw: "Andika jina la benki au gusa Ruka." } },
+    { id: "amount", type: "text", optional: true, q: { en: "How much did you lose, in KSh?", sw: "Ulipoteza kiasi gani, kwa KSh?" }, ph: { en: "Amount in KSh", sw: "Kiasi kwa KSh" },
+      err: { en: "Type the amount as a number, like 5000.", sw: "Andika kiasi kama namba, mfano 5000." },
+      when: function (d) { return d.kind === "mpesa" || d.lost === "yes"; }, parse: function (text) { var a = parseAmount(text); return a ? { value: a } : null; } },
+    { id: "when", type: "choice", q: { en: "When did it happen?", sw: "Ilitokea lini?" }, options: function () { return opts(WHEN); }, when: function () { return true; } },
+    { id: "via", type: "choice", q: { en: "How did they contact you?", sw: "Walikuwasiliana nawe vipi?" }, options: function () { return opts(VIA); }, when: function () { return true; } },
+    { id: "who", type: "text", optional: true, q: { en: "What is the scammer's number or name? Skip if you do not have it.", sw: "Namba au jina la tapeli ni lipi? Ruka kama huna." }, ph: { en: "Number or name", sw: "Namba au jina" },
+      err: { en: "Type a number or name, or tap Skip.", sw: "Andika namba au jina, au gusa Ruka." },
+      when: function () { return true; },
+      parse: function (text) {
+        var e = extract(text); if (e.number) return { value: e.number };
+        var v = String(text).trim().slice(0, 60); return v ? { value: v } : null;
+      } }
+  ];
+  function next(d) {
+    for (var i = 0; i < STEPS.length; i++) if (STEPS[i].when(d) && d[STEPS[i].id] === undefined) return STEPS[i];
+    return null;
+  }
+  function stepById(id) { for (var i = 0; i < STEPS.length; i++) if (STEPS[i].id === id) return STEPS[i]; return null; }
+  /* Apply a typed answer. Returns false when it cannot be read. */
+  function answerText(d, step, text) {
+    var r = step.parse(text, d); if (!r) return false;
+    d[step.id] = r.value;
+    if (r.extra) {
+      if (r.extra.amount && d.amount === undefined) d.amount = r.extra.amount;
+      if (r.extra.recipient) d.recipient = r.extra.recipient;
+    }
+    return true;
+  }
+
+  /* ---------- what to do, in order ---------- */
+  var L = {
+    fwd456: { en: "Forward the M-PESA confirmation message to 456 to ask for a reversal.", sw: "Tuma ujumbe wa uthibitisho wa M-PESA kwa 456 kuomba kurudishiwa pesa.",
+      wEn: "Safaricom starts a reversal request from that message. The person who got the money can still refuse, so do it fast.", wSw: "Safaricom huanzisha ombi la kurudisha pesa kutoka kwenye ujumbe huo. Aliyepokea pesa anaweza kukataa, kwa hivyo fanya haraka." },
+    fwd333: { en: "Forward the scammer's message or number to 333.", sw: "Tuma ujumbe au namba ya tapeli kwa 333.",
+      wEn: "This lets Safaricom's fraud team investigate and block the number.", wSw: "Timu ya ulaghai ya Safaricom inaweza kuchunguza na kuzuia namba hiyo." },
+    call100: { en: "Call Safaricom Customer Care on 100 and tell them what happened.", sw: "Piga simu Huduma kwa Wateja ya Safaricom kwa 100 uwaeleze kilichotokea.",
+      wEn: "Give them your transaction code so the case is on record against your account.", wSw: "Wape msimbo wa muamala ili kesi iwekwe kwenye rekodi ya akaunti yako." },
+    pin: { en: "Change your M-PESA PIN now.", sw: "Badilisha PIN yako ya M-PESA sasa.",
+      wEn: "If the scammer saw or heard your PIN, they can use it again.", wSw: "Tapeli akiiona au kuisikia PIN yako anaweza kuitumia tena." },
+    statement: { en: "Check your recent M-PESA transactions in the M-PESA app or on *334# for anything you did not do.", sw: "Angalia miamala yako ya hivi karibuni ya M-PESA kwenye programu ya M-PESA au *334# kwa chochote ambacho hukufanya.",
+      wEn: "Scammers often take money more than once.", wSw: "Matapeli mara nyingi huchukua pesa zaidi ya mara moja." },
+    police: { en: "Report to the police (999 or the nearest station) and ask for an OB number. You can also report to the DCI at cid.go.ke.", sw: "Ripoti kwa polisi (999 au kituo kilicho karibu) na uombe nambari ya OB. Unaweza pia kuripoti kwa DCI kupitia cid.go.ke.",
+      wEn: "You need a police report for any recovery or bank dispute.", wSw: "Unahitaji ripoti ya polisi kwa urejeshaji wowote au mzozo wa benki." },
+    evidence: { en: "Keep screenshots of the messages, your call log and the M-PESA message.", sw: "Hifadhi picha za skrini za jumbe, orodha ya simu na ujumbe wa M-PESA.",
+      wEn: "The police, your bank and Safaricom will ask for them.", wSw: "Polisi, benki yako na Safaricom wataziomba." },
+    noagent: { en: "Do not pay anyone who offers to recover your money.", sw: "Usimlipe yeyote anayejitolea kurudisha pesa zako.",
+      wEn: "Recovery agents are a second scam.", wSw: "Mawakala wa kurudisha pesa ni ulaghai wa pili." },
+    bankcall: { en: "Call your bank's fraud line now. Use the number on the back of your card or on the bank's official website, not one from an SMS.", sw: "Piga simu laini ya ulaghai ya benki yako sasa. Tumia namba iliyo nyuma ya kadi yako au kwenye tovuti rasmi ya benki, si ile iliyo kwenye SMS.",
+      wEn: "A bank can block a card or freeze an account only if you reach it quickly. Fake bank numbers are a common trap.", wSw: "Benki inaweza kuzuia kadi au kufunga akaunti tu ukiifikia haraka. Namba bandia za benki ni mtego wa kawaida." },
+    bankblock: { en: "Ask the bank to block your card and lock online and mobile banking.", sw: "Omba benki izuie kadi yako na ifunge huduma ya benki mtandaoni na kwenye simu.",
+      wEn: "This stops more money leaving while the case is checked.", wSw: "Hii inazuia pesa zaidi kutoka wakati kesi inakaguliwa." },
+    bankpw: { en: "Change your banking passwords and PINs from a phone you trust.", sw: "Badilisha nywila na PIN zako za benki ukitumia simu unayoiamini.",
+      wEn: "Anything you typed into a scam link or told a caller may be known to them.", wSw: "Chochote ulichoandika kwenye kiungo cha ulaghai au kumwambia mpigaji huenda wanakijua." },
+    bankdispute: { en: "Ask the bank for a dispute or case reference number and keep it.", sw: "Omba benki nambari ya kumbukumbu ya mzozo au kesi na uihifadhi.",
+      wEn: "You will need it to follow up and to claim.", wSw: "Utaihitaji kufuatilia na kudai." },
+    airtel: { en: "On Airtel, dial *100# and choose Report Fraud.", sw: "Kwenye Airtel, piga *100# kisha uchague Report Fraud.",
+      wEn: "This is Airtel's own fraud reporting option, listed on its Kenya website.", wSw: "Hili ni chaguo la Airtel la kuripoti ulaghai, lililoorodheshwa kwenye tovuti yake ya Kenya." },
+    netcall: { en: "Report it to your network and, for mobile money, to your mobile money provider. Use the customer care number on their official website or SIM pack.", sw: "Ripoti kwa mtandao wako na, kwa pesa za simu, kwa mtoa huduma wako wa pesa za simu. Tumia namba ya huduma kwa wateja iliyo kwenye tovuti rasmi au kifurushi cha SIM.",
+      wEn: "Only they can act on your account or line. Linda cannot see data from other networks.", wSw: "Wao pekee wanaweza kuchukua hatua kwenye akaunti au laini yako. Linda haiwezi kuona data ya mitandao mingine." },
+    sim1: { en: "From another phone, call your network and ask them to block the SIM.", sw: "Ukitumia simu nyingine, piga simu mtandao wako uombe SIM izuiwe.",
+      wEn: "A taken-over SIM lets the scammer receive your calls, SMS and codes.", wSw: "SIM iliyochukuliwa inamruhusu tapeli kupokea simu, SMS na misimbo yako." },
+    sim2: { en: "Tell your bank and your mobile money provider that your SIM may be compromised.", sw: "Mwambie benki yako na mtoa huduma wako wa pesa za simu kwamba SIM yako huenda imeingiliwa.",
+      wEn: "They can freeze transfers until your line is safe.", wSw: "Wanaweza kusimamisha uhamishaji hadi laini yako iwe salama." }
+  };
+  function plan(d) {
+    var k = d.kind, lost = k === "mpesa" || d.lost === "yes", ids = [];
+    if (k === "mpesa") ids = ["fwd456", "fwd333", "call100", "pin", "police", "evidence", "noagent"];
+    else if (k === "code") ids = ["pin", "statement"].concat(lost ? ["fwd456"] : [], ["call100", "fwd333"], lost ? ["police"] : [], ["evidence"]);
+    else if (k === "bank") ids = ["bankcall", "bankblock", "bankpw", "bankdispute"].concat(d.via === "sms" ? ["fwd333"] : [], ["police", "evidence"]);
+    else if (k === "other") ids = (d.net === "airtel" ? ["airtel"] : []).concat(["netcall"], lost ? ["police"] : [], d.via === "sms" ? ["fwd333"] : [], ["evidence"], lost ? ["noagent"] : []);
+    else ids = ["sim1", "sim2", "pin", "bankpw", "police", "evidence"];
+    return ids.map(function (id) { return { id: id, en: L[id].en, sw: L[id].sw, wEn: L[id].wEn, wSw: L[id].wSw }; });
+  }
+  function coverage(d) {
+    if (d.kind === "mpesa" || d.kind === "code")
+      return { en: "Safaricom can start a reversal request, but it cannot force the person who got the money to return it. If they refuse, the police can follow up.", sw: "Safaricom inaweza kuanzisha ombi la kurudisha pesa, lakini haiwezi kumlazimisha aliyepokea kuzirudisha. Wakikataa, polisi wanaweza kufuatilia." };
+    if (d.kind === "bank" || d.kind === "other")
+      return { en: "Linda cannot see or freeze accounts at banks or other networks. Only they can. Linda gives you the steps and a ready report to hand over.", sw: "Linda haiwezi kuona wala kufunga akaunti za benki au mitandao mingine. Wao pekee wanaweza. Linda inakupa hatua na ripoti iliyo tayari ya kuwakabidhi." };
+    return { en: "Only your network can block or restore your SIM. Linda gives you the steps and a ready report to hand over.", sw: "Mtandao wako pekee unaweza kuzuia au kurejesha SIM yako. Linda inakupa hatua na ripoti iliyo tayari ya kuwakabidhi." };
+  }
+  function urgent(d) {
+    var money = d.kind === "mpesa" || d.lost === "yes";
+    if (money && (d.when === "now" || d.when === "today"))
+      return { en: "Act in the next few minutes if you can. The sooner you report, the better the chance of stopping or tracing the money.", sw: "Chukua hatua ndani ya dakika chache ukiweza. Kadri unavyoripoti mapema, ndivyo nafasi ya kuzuia au kufuatilia pesa inavyoongezeka." };
+    return null;
+  }
+
+  /* ---------- the short report ---------- */
+  var MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  function stamp(now) {
+    var h = now.getHours(), m = now.getMinutes(), ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12;
+    return now.getDate() + " " + MON[now.getMonth()] + " " + now.getFullYear() + ", " + h + ":" + (m < 10 ? "0" + m : m) + " " + ap;
+  }
+  function refOf(now, rnd) {
+    var y = String(now.getFullYear()).slice(2), mo = ("0" + (now.getMonth() + 1)).slice(-2), da = ("0" + now.getDate()).slice(-2);
+    return "LND-" + y + mo + da + "-" + (1000 + Math.floor((rnd === undefined ? Math.random() : rnd) * 9000));
+  }
+  function money(n) { return "KSh " + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+  /* lookup(number) returns {status,count} from Safaricom's list, or null */
+  function build(d, lookup, now, rnd) {
+    now = now || new Date();
+    var lines = [], lost = d.kind === "mpesa" || d.lost === "yes", rec = null;
+    lines.push(["What happened", KINDS[d.kind].label]);
+    lines.push(["Money lost", lost ? (d.amount ? money(d.amount) : "Yes, amount not given") : (d.lost === "no" ? "None" : "Not sure")]);
+    if (d.code) lines.push(["M-PESA transaction code", d.code]);
+    function annotate(v) {
+      var note = "", r = null;
+      if (lookup && /\d{4}/.test(v)) r = lookup(v);
+      if (r && r.status === "confirmed") note = " (on Safaricom's confirmed fraud list, " + r.count + " reports)";
+      else if (r && r.status === "pending") note = " (reported by " + r.count + " customers, under review)";
+      return { text: v + note, rec: r };
+    }
+    if (d.recipient) lines.push(["Money went to", annotate(d.recipient).text]);
+    if (d.net) lines.push(["Network", NET[d.net][0]]);
+    if (d.bank) lines.push(["Bank", d.bank]);
+    lines.push(["When", WHEN[d.when][0]]);
+    lines.push(["How they contacted me", VIA[d.via][0]]);
+    if (d.who) { var a = annotate(d.who); rec = a.rec; lines.push(["Scammer's number or name", a.text]); }
+    var ref = refOf(now, rnd), when = stamp(now);
+    var text = "SCAM REPORT (prepared with Linda)\nRef: " + ref + "\nPrepared: " + when + "\n" +
+      lines.map(function (l) { return l[0] + ": " + l[1]; }).join("\n") + "\nI can provide screenshots and my call log on request.";
+    return { ref: ref, when: when, lines: lines, text: text, plan: plan(d), coverage: coverage(d), urgent: urgent(d), rec: rec };
+  }
+
+  return { STEPS: STEPS, KINDS: KINDS, next: next, stepById: stepById, answerText: answerText, extract: extract, parseAmount: parseAmount, plan: plan, build: build, prettyNum: prettyNum };
+})();
+if (typeof module !== "undefined") module.exports = LindaFlow;
+
+</script>
+<script>
+(function () {
+  var M = LindaModel, FL = LindaFlow, I = {
+    shield: '<svg class="i" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+    home: '<svg class="i" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>',
+    msg: '<svg class="i" viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>',
+    phone: '<svg class="i" viewBox="0 0 24 24"><path d="M6 3h3l2 5-2 1.5a11 11 0 006 6L16 13l5 2v3a2 2 0 01-2 2A16 16 0 014 5a2 2 0 012-2z"/></svg>',
+    spark: '<svg class="i" viewBox="0 0 24 24"><path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/></svg>',
+    alert: '<svg class="i" viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/></svg>',
+    send: '<svg class="i" viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-3-7z"/></svg>',
+    back: '<svg class="i" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
+    user: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>',
+    check: '<svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M5 12l5 5 9-10"/></svg>',
+    end: '<svg class="i" viewBox="0 0 24 24"><path d="M3 14c5-5 13-5 18 0l-2 3-4-1v-3c-2-.7-4-.7-6 0v3l-4 1z"/></svg>',
+    play: '<svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M7 5l12 7-12 7z"/></svg>'
+  };
+
+  /* ---------- text ---------- */
+  var T = {
+    en: { home: "Home", msgs: "Messages", calls: "Calls", ask: "Ask Linda", demo: "Demo",
+      prot: "You are protected", sync: "Fraud list synced with Safaricom at", flagged: "scams flagged", sent: "reports you sent",
+      recent: "Recent activity", scamLikely: "Scam likely", careful: "Be careful", looksOk: "No scam signs found",
+      verifiedSender: "Verified sender", preview: "Preview hidden for your safety", report: "Report to Safaricom", reported: "Reported. Thank you",
+      block: "Block sender", blocked: "Sender blocked", how: "How Linda decides", howSub: "The model, the rules and the Safaricom list",
+      why: "Why Linda thinks so", todo: "What to do", words: "Words that raised the risk", risk: "Risk",
+      sentToTeam: "Sent to the Safaricom fraud team", incoming: "Incoming call", inCall: "In call", answer: "Answer", decline: "Decline",
+      repNum: "Report this number", unknownNum: "Unknown number", noReports: "No reports yet. Linda cannot confirm who this is.",
+      repFraud: "Reported for fraud", verified: "Verified", underReview: "Under review", reviewSub: "Safaricom is reviewing this number. Be careful.",
+      verifiedSub: "Confirmed by Safaricom. This is a genuine number.", reports: "reports",
+      bNoPin: "Do not share your PIN, OTP or ID", bNoPinSub: "Safaricom will never ask for them on a call. Hang up if pushed.",
+      bVer: "Verified caller", bVerSub: "Even so, never say your PIN out loud.", bCare: "Be careful", bCareSub: "This number is under review. Do not share your PIN.",
+      bUnk: "Unknown caller", bUnkSub: "Linda cannot confirm who this is. Do not share your PIN or OTP.",
+      inContacts: "In your contacts", contactSub: "No fraud reports on this number.", bContact: "Saved contact", bContactSub: "No fraud reports on this number. Never share your PIN or OTP, even with someone you know.",
+      stop: "Stop. Do not enter your PIN", stopSub: "You are on a call with a number reported for fraud, and a payment request just appeared. Safaricom never asks you to pay during a call.",
+      cancelPay: "Cancel payment", knowThem: "I know this person", payCancelled: "Payment cancelled. Reported to the fraud team.", watching: "Linda stays on watch during this call",
+      askHint: "Paste a message or type a number. Linda checks it against Safaricom's fraud records and its own model.", askPh: "Paste a message or number", checking: "Checking...",
+      demoTitle: "Demo mode", demoSub: "Trigger what Linda would catch on a real phone.",
+      s1: "Scam SMS arrives", s2: "Call from a reported number", s3: "Call from Customer Care", s4: "Call from an unknown number", s5: "Call, then a payment prompt",
+      s6: "Call from a saved contact", s7: "SMS pretending to be a contact", s8: "I've been scammed: get help",
+      console: "Open fraud-team console", reset: "Reset demo data", close: "Close",
+      notifT: "Linda blocked a scam SMS", notifS: "From 0711 000 412. Preview hidden. Tap to review.",
+      notif2T: "Linda flagged a message pretending to be someone you know", notif2S: "From 0745 111 222. Tap to review.",
+      fraudNumber: "Number on Safaricom's fraud list", pendingNumber: "Reported, under review", verNumber: "Verified by Safaricom", unkNumber: "No reports about this number yet",
+      l1: "Safaricom's fraud list", l1d: "Numbers reported to 333 and confirmed by the fraud team. Linda always trusts this first.",
+      l2: "Plain rules", l2d: "Checks for asking for a PIN, sending money back, upfront fees, fake prizes, links, rushing and people pretending to be your contacts.",
+      l3: "Linda's own model", l3d: "A text classifier that learns scam wording, so it can catch new messages from numbers nobody has reported.",
+      mTrain: "training messages", mWords: "word features", mCv: "cross-check accuracy",
+      mNote: "Trained on a small set of messages we wrote in English, Swahili and Sheng, to show how it works. A real version trains on confirmed Safaricom reports.",
+      cov: "What Linda covers", cov1: "Safaricom numbers and messages", cov1d: "Fraud list, verified callers and reports straight to the fraud team.",
+      cov2: "Any message or call wording", cov2d: "The rules and the model read the text, whatever network it came from.",
+      cov3: "Banks and other networks", cov3d: "Linda gives you the steps and a ready report. Only the bank or network can freeze an account or line.",
+      scammed: "I've been scammed", scammedSub: "Get your next steps and a ready report",
+      flowIntro: "I am sorry this happened. I will ask a few quick questions, then give you the steps to take and a short report. Do not send any more money.",
+      flowStop: "Stop these questions", skip: "Skip", copy: "Copy report", copied: "Report copied", copyManual: "Press and hold the report text to copy it",
+      sendCase: "Send to Safaricom fraud team", caseSent: "Case sent to the fraud team", caseDone: "Sent to the fraud team",
+      nextSteps: "Do these now", yourReport: "Your report", reportNote: "The report is in English so Safaricom, your bank or the police can use it as it is.",
+      checkNum: "Check every phone number on the official website before you call.", tapOption: "Tap one of the options above",
+      confirmedNow: "Safaricom confirmed {n}. Linda now warns on it.", synced: "Fraud list updated", fraudCnt: "reports" },
+    sw: { home: "Nyumbani", msgs: "Ujumbe", calls: "Simu", ask: "Uliza Linda", demo: "Onyesho",
+      prot: "Umelindwa", sync: "Orodha ya ulaghai imesasishwa na Safaricom saa", flagged: "ulaghai umegunduliwa", sent: "ripoti ulizotuma",
+      recent: "Shughuli za hivi karibuni", scamLikely: "Huenda ni ulaghai", careful: "Kuwa mwangalifu", looksOk: "Hakuna dalili za ulaghai",
+      verifiedSender: "Mtumaji aliyethibitishwa", preview: "Maudhui yamefichwa kwa usalama wako", report: "Ripoti kwa Safaricom", reported: "Imeripotiwa. Asante",
+      block: "Mzuie mtumaji", blocked: "Mtumaji amezuiwa", how: "Jinsi Linda inavyoamua", howSub: "Modeli, kanuni na orodha ya Safaricom",
+      why: "Kwa nini Linda inafikiri hivyo", todo: "Cha kufanya", words: "Maneno yaliyoongeza hatari", risk: "Hatari",
+      sentToTeam: "Imetumwa kwa timu ya ulaghai ya Safaricom", incoming: "Simu inaingia", inCall: "Kwenye simu", answer: "Pokea", decline: "Kataa",
+      repNum: "Ripoti namba hii", unknownNum: "Namba isiyojulikana", noReports: "Hakuna ripoti bado. Linda haiwezi kuthibitisha huyu ni nani.",
+      repFraud: "Imeripotiwa kwa ulaghai", verified: "Imethibitishwa", underReview: "Inakaguliwa", reviewSub: "Safaricom inakagua namba hii. Kuwa mwangalifu.",
+      verifiedSub: "Imethibitishwa na Safaricom. Hii ni namba halali.", reports: "ripoti",
+      bNoPin: "Usitoe PIN, OTP wala kitambulisho", bNoPinSub: "Safaricom haiombi kamwe kwenye simu. Kata simu ukilazimishwa.",
+      bVer: "Mpigaji aliyethibitishwa", bVerSub: "Hata hivyo, usitaje PIN yako kamwe.", bCare: "Kuwa mwangalifu", bCareSub: "Namba hii inakaguliwa. Usitoe PIN yako.",
+      bUnk: "Mpigaji asiyejulikana", bUnkSub: "Linda haiwezi kuthibitisha huyu ni nani. Usitoe PIN wala OTP.",
+      inContacts: "Kwenye anwani zako", contactSub: "Hakuna ripoti za ulaghai kuhusu namba hii.", bContact: "Anwani iliyohifadhiwa", bContactSub: "Hakuna ripoti za ulaghai kuhusu namba hii. Usitoe PIN wala OTP kamwe, hata kwa mtu unayemjua.",
+      stop: "Simama. Usiweke PIN yako", stopSub: "Uko kwenye simu na namba iliyoripotiwa kwa ulaghai, na ombi la malipo limetokea. Safaricom haikuombi ulipe wakati wa simu.",
+      cancelPay: "Ghairi malipo", knowThem: "Namfahamu mtu huyu", payCancelled: "Malipo yamegairiwa. Imeripotiwa kwa timu ya ulaghai.", watching: "Linda inaendelea kulinda wakati wa simu hii",
+      askHint: "Bandika ujumbe au andika namba. Linda inaikagua kwenye rekodi za ulaghai za Safaricom na modeli yake.", askPh: "Bandika ujumbe au namba", checking: "Inakagua...",
+      demoTitle: "Hali ya onyesho", demoSub: "Anzisha kile Linda ingegundua kwenye simu halisi.",
+      s1: "SMS ya ulaghai inaingia", s2: "Simu kutoka namba iliyoripotiwa", s3: "Simu kutoka Huduma kwa Wateja", s4: "Simu kutoka namba isiyojulikana", s5: "Simu, kisha ombi la malipo",
+      s6: "Simu kutoka anwani iliyohifadhiwa", s7: "SMS inayojifanya kuwa anwani yako", s8: "Nimetapeliwa: pata msaada",
+      console: "Fungua kituo cha timu ya ulaghai", reset: "Weka upya data ya onyesho", close: "Funga",
+      notifT: "Linda imezuia SMS ya ulaghai", notifS: "Kutoka 0711 000 412. Maudhui yamefichwa. Gusa kukagua.",
+      notif2T: "Linda imegundua ujumbe unaojifanya kuwa mtu unayemjua", notif2S: "Kutoka 0745 111 222. Gusa kukagua.",
+      fraudNumber: "Namba iko kwenye orodha ya ulaghai ya Safaricom", pendingNumber: "Imeripotiwa, inakaguliwa", verNumber: "Imethibitishwa na Safaricom", unkNumber: "Hakuna ripoti kuhusu namba hii bado",
+      l1: "Orodha ya ulaghai ya Safaricom", l1d: "Namba zilizoripotiwa kwa 333 na kuthibitishwa na timu ya ulaghai. Linda inaiamini hii kwanza.",
+      l2: "Kanuni rahisi", l2d: "Inakagua kuombwa PIN, kurudisha pesa, ada ya mapema, zawadi bandia, viungo, kukimbizwa na watu wanaojifanya kuwa anwani zako.",
+      l3: "Modeli ya Linda", l3d: "Kiainishi cha maandishi kinachojifunza maneno ya ulaghai, kwa hiyo kinagundua ujumbe mpya kutoka namba ambazo hakuna aliyeripoti.",
+      mTrain: "jumbe za mafunzo", mWords: "vipengele vya maneno", mCv: "usahihi wa ukaguzi",
+      mNote: "Imefunzwa kwa jumbe chache tulizoandika kwa Kiingereza, Kiswahili na Sheng, kuonyesha jinsi inavyofanya kazi. Toleo halisi hufunzwa kwa ripoti zilizothibitishwa za Safaricom.",
+      cov: "Linda inashughulikia nini", cov1: "Namba na jumbe za Safaricom", cov1d: "Orodha ya ulaghai, wapigaji waliothibitishwa na ripoti moja kwa moja kwa timu ya ulaghai.",
+      cov2: "Maneno ya ujumbe au simu yoyote", cov2d: "Kanuni na modeli husoma maandishi, kutoka mtandao wowote.",
+      cov3: "Benki na mitandao mingine", cov3d: "Linda inakupa hatua na ripoti iliyo tayari. Benki au mtandao pekee unaweza kufunga akaunti au laini.",
+      scammed: "Nimetapeliwa", scammedSub: "Pata hatua za kuchukua na ripoti iliyo tayari",
+      flowIntro: "Pole kwa yaliyotokea. Nitakuuliza maswali machache, kisha nikupe hatua za kuchukua na ripoti fupi. Usitume pesa zaidi.",
+      flowStop: "Acha maswali haya", skip: "Ruka", copy: "Nakili ripoti", copied: "Ripoti imenakiliwa", copyManual: "Bonyeza na ushikilie maandishi ya ripoti ili kunakili",
+      sendCase: "Tuma kwa timu ya ulaghai ya Safaricom", caseSent: "Kesi imetumwa kwa timu ya ulaghai", caseDone: "Imetumwa kwa timu ya ulaghai",
+      nextSteps: "Fanya haya sasa", yourReport: "Ripoti yako", reportNote: "Ripoti iko kwa Kiingereza ili Safaricom, benki yako au polisi waitumie moja kwa moja.",
+      checkNum: "Thibitisha kila namba ya simu kwenye tovuti rasmi kabla ya kupiga.", tapOption: "Gusa moja ya chaguo hapo juu",
+      confirmedNow: "Safaricom imethibitisha {n}. Linda sasa inaonya kuihusu.", synced: "Orodha ya ulaghai imesasishwa", fraudCnt: "ripoti" }
+  };
+  var TYPE = {
+    reversal: { en: "M-PESA reversal scam", sw: "Ulaghai wa kurudisha pesa" }, prize: { en: "Fake prize promotion", sw: "Promosheni bandia ya zawadi" },
+    kra: { en: "Fake KRA refund", sw: "Marejesho bandia ya KRA" }, loan: { en: "Fake loan fee", sw: "Ada bandia ya mkopo" },
+    other: { en: "Suspicious caller", sw: "Mpigaji anayetiliwa shaka" }, verified: { en: "Verified by Safaricom", sw: "Imethibitishwa na Safaricom" }
+  };
+
+  /* ---------- data ---------- */
+  var CONTACTS = [{ n: "0722 555 101", name: "Mum" }, { n: "0733 555 202", name: "Brian (Work)" }];
+  var MSGS = [
+    { id: "m5", from: "0745 111 222", t: "Just now", body: "Hi, it's Brian. I've lost my phone, this is my new number. Please send KSh 3,500 to 0711 555 666 urgently, I'll pay you back tonight." },
+    { id: "m1", from: "MPESA", t: "4:48 PM", body: "TJK4M9X2QA Confirmed. KSh 350.00 paid to Naivas Westlands on 26/10/26 at 4:48 PM. New M-PESA balance is KSh 2,140.50." },
+    { id: "m2", from: "0711 000 412", t: "4:52 PM", body: "TJK8W2LP91 Confirmed. You have received KSh 8,500.00 from JOHN KAMAU 0711 000 412. Sorry, I sent it to the wrong number. Please reverse it urgently to 0711 000 412." },
+    { id: "m3", from: "KRA-INFO", t: "Yesterday", body: "KRA: You have a tax refund of KSh 12,400. Claim now at kra-refund-claim.co.ke before it expires today." },
+    { id: "m4", from: "0722 555 101", t: "Yesterday", body: "Nimefika nyumbani salama. Nitakupigia baadaye usiku." }
+  ];
+  var CALLS = [{ n: "0722 555 101", t: "Today, 8:02 AM" }, { n: "100", t: "Today, 2:10 PM" }, { n: "0711 000 412", t: "Today, 11:03 AM" }, { n: "0733 000 905", t: "Yesterday" }, { n: "0722 000 318", t: "Mon" }];
+  var SUGG = [
+    "Sorry, I sent money to your number by mistake. Please reverse KSh 5,000.",
+    "Congratulations! You won KSh 100,000. Send your PIN to claim.",
+    "Boss tuma 2k ya ada upate mkopo wa 50k haraka",
+    "0745 000 777",
+    "Confirmed. KSh 200.00 sent to Mama Mboga."
+  ];
+
+  var S = { lang: "en", tab: "home", msg: null, sheet: null, ov: null, chat: [], flow: null, reports: 0, done: {}, shared: Shared.load() };
+  var timers = [];
+  var $ = function (q) { return document.querySelector(q); };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function t(k) { return T[S.lang][k] || T.en[k] || k; }
+  function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  try { var sv = localStorage.getItem("linda_lang"); if (sv === "sw") S.lang = "sw"; } catch (e) {}
+
+  function contactOf(n) {
+    var w = M.normNum(n), i;
+    for (i = 0; i < CONTACTS.length; i++) if (M.normNum(CONTACTS[i].n) === w) return CONTACTS[i];
+    return null;
+  }
+  function nameOf(n) { var c = contactOf(n); return c ? c.name : n; }
+  function scanMsg(m) { return M.scan(m.body, { sender: m.from, db: S.shared.db, contacts: CONTACTS }); }
+  function typeOf(res, body) {
+    var k = res.reasons.map(function (r) { return r.k; });
+    if (k.indexOf("reversal") > -1) return "reversal";
+    if (k.indexOf("prize") > -1) return "prize";
+    if (k.indexOf("fee") > -1) return "loan";
+    if (/kra/i.test(body)) return "kra";
+    return "other";
+  }
+  function callInfo(n) {
+    var key = Shared.findKey(S.shared.db, n), d = key ? S.shared.db[key] : null, s = d ? d.status : "none", c = contactOf(n);
+    if (s === "verified") return { tone: "green", level: "ok", title: d.name || n, badge: I.check + " " + t("verified") + " · " + (d.name || ""), sub: t("verifiedSub"), d: d };
+    if (s === "confirmed") return { tone: "red", level: "scam", title: c ? c.name + " · " + n : n, badge: I.alert + " " + t("repFraud"), sub: d.count + " " + t("reports") + " · " + TYPE[d.type || "other"][S.lang], d: d };
+    if (s === "pending") return { tone: "amber", level: "caution", title: c ? c.name + " · " + n : n, badge: I.alert + " " + t("underReview"), sub: t("reviewSub"), d: d };
+    if (c) return { tone: "blue", level: "contact", title: c.name, badge: I.user + " " + t("inContacts"), sub: t("contactSub"), d: null, contact: c };
+    return { tone: "grey", level: "unknown", title: n, badge: t("unknownNum"), sub: t("noReports"), d: null };
+  }
+  function tagFor(n) {
+    var c = callInfo(n);
+    if (c.tone === "green") return '<span class="tag green">' + I.check + " " + t("verified") + "</span>";
+    if (c.tone === "red") return '<span class="tag red">' + t("repFraud") + "</span>";
+    if (c.tone === "amber") return '<span class="tag amber">' + t("underReview") + "</span>";
+    if (c.tone === "blue") return '<span class="tag blue">' + t("inContacts") + "</span>";
+    return '<span class="tag grey">' + t("unknownNum") + "</span>";
+  }
+
+  /* ---------- verdict card ---------- */
+  function verdictHTML(res, extra) {
+    var title = res.level === "scam" ? t("scamLikely") : res.level === "caution" ? t("careful") : t("looksOk");
+    var h = '<div class="vd ' + res.level + '"><h3>' + (res.level === "ok" ? I.check : I.alert) + esc(title) + '<span class="score">' + t("risk") + " " + res.score + "/100</span></h3>";
+    if (res.reasons.length && (res.level !== "ok" || res.showWhy)) {
+      h += "<h4>" + t("why") + "</h4><ul>" + res.reasons.map(function (r) { return "<li>" + esc(M.reasonText(r, S.lang)) + "</li>"; }).join("") + "</ul>";
+    }
+    if (res.words && res.words.length) h += '<div class="words">' + t("words") + ": " + esc(res.words.join(", ")) + "</div>";
+    h += "<h4>" + t("todo") + "</h4><ul>" + res.steps.map(function (k) { return "<li>" + esc(M.stepText(k, S.lang)) + "</li>"; }).join("") + "</ul>";
+    return h + (extra || "") + "</div>";
+  }
+  function highlight(body, res) {
+    var terms = (res.words || []).concat(["wrong number", "reverse it urgently", "expires today", "claim now", "within 24 hours", "new number", "lost my phone", "urgently"]);
+    var out = esc(body), urls = out.match(/[a-z0-9-]+\.(co\.ke|com|top|xyz|info)\S*/gi) || [];
+    if (res.level === "ok") return out;
+    terms = terms.concat(urls);
+    terms.forEach(function (w) {
+      if (!w || w.length < 3) return;
+      var re = new RegExp("(" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "i");
+      out = out.replace(re, function (m) { return out.indexOf("<mark>" + m) > -1 ? m : "<mark>" + m + "</mark>"; });
+    });
+    return out;
+  }
+
+  /* ---------- views ---------- */
+  function header(title, withTools) {
+    return '<div class="hd">' + (withTools ? '<div class="logo">' + I.shield + "</div>" : "") + "<h2>" + title + "</h2>" +
+      '<div class="lang" role="group" aria-label="Language"><button data-a="lang" data-v="en" aria-pressed="' + (S.lang === "en") + '">EN</button><button data-a="lang" data-v="sw" aria-pressed="' + (S.lang === "sw") + '">SW</button></div>' +
+      '<button class="pill-btn" data-a="demo">' + I.play + " <b>" + t("demo") + "</b></button></div>";
+  }
+  function vHome() {
+    var flagged = MSGS.filter(function (m) { return scanMsg(m).level !== "ok"; }).length;
+    var recent = MSGS.map(function (m) { return { m: m, r: scanMsg(m) }; }).filter(function (x) { return x.r.level !== "ok"; }).slice(0, 2);
+    return header("Linda", true) +
+      '<div class="card status"><h3>' + t("prot") + '</h3><p><span class="dot"></span>' + t("sync") + " " + Shared.fmtTime(S.shared.syncedAt) + "</p></div>" +
+      '<div class="stats"><div class="card stat"><b>' + (12 + flagged) + "</b><span>" + t("flagged") + '</span></div><div class="card stat"><b>' + S.reports + "</b><span>" + t("sent") + "</span></div></div>" +
+      '<button class="row sos" data-a="flowstart"><div class="av">' + I.alert + '</div><div class="tx"><b>' + t("scammed") + "</b><p>" + t("scammedSub") + "</p></div></button>" +
+      '<button class="row" data-a="tab" data-v="about"><div class="av">' + I.spark + '</div><div class="tx"><b>' + t("how") + "</b><p>" + t("howSub") + "</p></div></button>" +
+      '<div class="sec">' + t("recent") + "</div>" +
+      recent.map(function (x) {
+        return '<button class="row bad" data-a="openmsg" data-v="' + x.m.id + '"><div class="av">' + I.alert + '</div><div class="tx"><b>' + t("scamLikely") + "<small>" + esc(x.m.t) + "</small></b><p>" + esc(nameOf(x.m.from)) + "</p></div></button>";
+      }).join("") +
+      '<div class="row good"><div class="av">' + I.check + '</div><div class="tx"><b>' + t("verified") + "<small>2:10 PM</small></b><p>Safaricom Customer Care</p></div></div>";
+  }
+  function vMsgs() {
+    if (S.msg) {
+      var m = MSGS.filter(function (x) { return x.id === S.msg; })[0], res = scanMsg(m), ct = contactOf(m.from);
+      var h = '<button class="back" data-a="closemsg">' + I.back + " " + t("msgs") + '</button><div class="sec">' + esc(ct ? ct.name + " · " + m.from : m.from) + " · " + esc(m.t) + "</div>" + (ct ? '<span class="tag blue" style="width:fit-content">' + t("inContacts") + "</span>" : "");
+      h += '<div class="msgbox">' + highlight(m.body, res) + "</div>";
+      var done = S.done[m.id];
+      var extra = res.level === "ok" ? "" : '<div class="btns"><button class="btn r w" data-a="reportmsg" data-v="' + m.id + '"' + (done ? " disabled" : "") + ">" + (done ? t("reported") : t("report")) + '</button><button class="btn w" data-a="toast" data-v="blocked">' + t("block") + "</button></div>";
+      var sos = res.level === "scam" ? '<button class="btn sos" data-a="flowstart">' + I.alert + " " + t("scammed") + "</button>" : "";
+      return h + verdictHTML(res, extra) + sos;
+    }
+    return header(t("msgs")) + MSGS.map(function (m) {
+      var r = scanMsg(m), ct = contactOf(m.from), who = ct ? ct.name : m.from;
+      if (r.level !== "ok") return '<button class="row ' + (r.level === "scam" ? "bad" : "warn") + '" data-a="openmsg" data-v="' + m.id + '"><div class="av">' + I.alert + '</div><div class="tx"><b>' + esc(who) + "<small>" + esc(m.t) + "</small></b><p>" + t("preview") + '</p><span class="tag ' + (r.level === "scam" ? "red" : "amber") + '">' + (r.level === "scam" ? t("scamLikely") : t("careful")) + "</span></div></button>";
+      var ver = /^(mpesa|safaricom)/i.test(m.from);
+      return '<button class="row good" data-a="openmsg" data-v="' + m.id + '"><div class="av">' + I.msg + '</div><div class="tx"><b>' + esc(who) + "<small>" + esc(m.t) + "</small></b><p>" + esc(m.body) + "</p>" +
+        (ver ? '<span class="tag green">' + I.check + " " + t("verifiedSender") + "</span>" : ct ? '<span class="tag blue">' + t("inContacts") + "</span>" : "") + "</div></button>";
+    }).join("");
+  }
+  function vCalls() {
+    return header(t("calls")) + CALLS.map(function (c) {
+      var ci = callInfo(c.n), cls = ci.tone === "red" ? "bad" : ci.tone === "green" ? "good" : ci.tone === "amber" ? "warn" : "";
+      var nm = ci.d && ci.d.name ? ci.d.name : ci.contact ? ci.contact.name : c.n;
+      var sub = ci.d ? (ci.d.name || TYPE[ci.d.type || "other"][S.lang]) : ci.contact ? c.n : t("unkNumber");
+      return '<button class="row ' + cls + '" data-a="callnum" data-v="' + esc(c.n) + '"><div class="av">' + I.phone + '</div><div class="tx"><b>' + esc(nm) + "<small>" + esc(c.t) + "</small></b><p>" + esc(sub) + "</p>" + tagFor(c.n) + "</div></button>";
+    }).join("");
+  }
+
+  /* ----- Ask Linda: checks and the "I've been scammed" steps ----- */
+  function flowActive() { return S.flow && !S.flow.done; }
+  function curStep() { return flowActive() ? FL.next(S.flow.data) : null; }
+  function resultHTML() {
+    var r = S.flow.result, d = S.flow.data, L = S.lang, sent = S.flow.sent;
+    var h = '<div class="res" style="display:flex;flex-direction:column;gap:10px">';
+    if (r.urgent) h += '<div class="urgent">' + esc(r.urgent[L]) + "</div>";
+    h += "<h3>" + t("nextSteps") + '</h3><ol class="steps">' + r.plan.map(function (p) { return "<li><div><b>" + esc(p[L]) + "</b><small>" + esc(L === "sw" ? p.wSw : p.wEn) + "</small></div></li>"; }).join("") + "</ol>";
+    h += '<div class="cov">' + esc(r.coverage[L]) + "</div>";
+    h += "<h3>" + t("yourReport") + '</h3><pre class="report" id="reportText">' + esc(r.text) + '</pre><div class="fine">' + t("reportNote") + "</div>";
+    h += '<div class="btns"><button class="btn w" data-a="copycase">' + t("copy") + '</button><button class="btn p w" data-a="sendcase"' + (sent ? " disabled" : "") + ">" + (sent ? t("caseDone") : t("sendCase")) + "</button></div>";
+    return h + '<div class="fine">' + t("checkNum") + "</div></div>";
+  }
+  function vAsk() {
+    var h = header(t("ask"), false) + '<div class="chat">';
+    h += '<div class="bub li plain">' + esc(t("askHint")) + '<div class="opts"><button data-a="flowstart" style="border-color:var(--red);color:var(--red)">' + t("scammed") + '</button></div><div class="sugg">' + SUGG.map(function (s, i) { return '<button data-a="chip" data-v="' + i + '">' + esc(s.length > 38 ? s.slice(0, 38) + "..." : s) + "</button>"; }).join("") + "</div></div>";
+    var cur = curStep(), last = S.chat.length - 1;
+    S.chat.forEach(function (c, idx) {
+      if (c.me) h += '<div class="bub me">' + esc(c.me) + "</div>";
+      else if (c.typing) h += '<div class="bub li plain">' + t("checking") + "</div>";
+      else if (c.flowIntro) h += '<div class="bub li plain">' + t("flowIntro") + (flowActive() ? '<div class="opts"><button class="skip" data-a="flowstop">' + t("flowStop") + "</button></div>" : "") + "</div>";
+      else if (c.flowErr) { var es = FL.stepById(c.flowErr); h += '<div class="bub li plain err">' + esc(es.err[S.lang]) + "</div>"; }
+      else if (c.flowQ) {
+        var st = FL.stepById(c.flowQ), active = cur && cur.id === st.id && idx === last;
+        h += '<div class="bub li plain">' + esc(st.q[S.lang]);
+        if (active && st.type === "choice") h += '<div class="opts">' + st.options().map(function (o) { return '<button data-a="flowopt" data-v="' + o.v + '">' + esc(o[S.lang]) + "</button>"; }).join("") + "</div>";
+        if (active && st.type === "text" && st.optional) h += '<div class="opts"><button class="skip" data-a="flowskip">' + t("skip") + "</button></div>";
+        h += "</div>";
+      }
+      else if (c.flowDone) h += '<div class="bub li">' + resultHTML() + "</div>";
+      else if (c.res) h += '<div class="bub li">' + verdictHTML(c.res) + "</div>";
+    });
+    return h + "</div>";
+  }
+  function vAbout() {
+    var st = M.stats;
+    return '<button class="back" data-a="tab" data-v="home">' + I.back + " " + t("home") + "</button><h2>" + t("how") + "</h2>" +
+      [["1", "l1"], ["2", "l2"], ["3", "l3"]].map(function (x) { return '<div class="card layer"><div class="n">' + x[0] + "</div><div><b>" + t(x[1]) + "</b><p>" + t(x[1] + "d") + "</p></div></div>"; }).join("") +
+      '<div class="mstat"><div><b>' + st.total + "</b><span>" + t("mTrain") + "</span></div><div><b>" + st.features + "</b><span>" + t("mWords") + "</span></div><div><b>" + Math.round(st.cv * 100) + "%</b><span>" + t("mCv") + "</span></div></div>" +
+      '<p class="fine">' + t("mNote") + "</p><h2>" + t("cov") + "</h2>" +
+      [["1", "cov1"], ["2", "cov2"], ["3", "cov3"]].map(function (x) { return '<div class="card layer"><div class="n">' + x[0] + "</div><div><b>" + t(x[1]) + "</b><p>" + t(x[1] + "d") + "</p></div></div>"; }).join("") +
+      '<a class="link" href="dashboard.html">' + t("console") + "</a>";
+  }
+  function renderNav() {
+    var tabs = [["home", t("home"), I.home], ["msgs", t("msgs"), I.msg], ["calls", t("calls"), I.phone], ["ask", t("ask"), I.spark]];
+    $("#nav").innerHTML = tabs.map(function (x) { return '<button data-a="tab" data-v="' + x[0] + '"' + (S.tab === x[0] || (S.tab === "about" && x[0] === "home") ? ' aria-current="true"' : "") + ">" + x[2] + x[1] + "</button>"; }).join("");
+  }
+  function render(keepScroll) {
+    var v = $("#view"), top = v.scrollTop;
+    var h = S.tab === "home" ? vHome() : S.tab === "msgs" ? vMsgs() : S.tab === "calls" ? vCalls() : S.tab === "ask" ? vAsk() : vAbout();
+    v.innerHTML = h; v.scrollTop = keepScroll ? top : 0;
+    var old = $("#askbar"), keep = old && $("#askInput") ? $("#askInput").value : ""; if (old) old.remove();
+    if (S.tab === "ask") {
+      var cs = curStep(), ph = cs && cs.type === "text" ? cs.ph[S.lang] : t("askPh");
+      var bar = document.createElement("div"); bar.className = "askbar"; bar.id = "askbar";
+      bar.innerHTML = '<input id="askInput" type="text" placeholder="' + esc(ph) + '" autocomplete="off"><button data-a="ask" aria-label="Send">' + I.send + "</button>";
+      $("#nav").parentNode.insertBefore(bar, $("#nav"));
+      if (keep) $("#askInput").value = keep;
+    }
+    renderNav();
+  }
+  function toBottom() { var v = $("#view"); v.scrollTop = v.scrollHeight; }
+
+  /* ---------- overlays ---------- */
+  function renderOv() {
+    var o = S.ov, h = "";
+    if (S.sheet === "demo") {
+      h += '<div class="scrim" data-a="closesheet"></div><div class="sheet"><h3>' + t("demoTitle") + '</h3><p class="fine">' + t("demoSub") + '</p><div class="demo-list">' +
+        [1, 2, 3, 4, 5, 6, 7, 8].map(function (n) { return '<button data-a="scn" data-v="' + n + '"><b>' + n + "</b>" + t("s" + n) + "</button>"; }).join("") +
+        '</div><div class="btns"><a class="btn w link" style="text-align:center;text-decoration:none" href="dashboard.html">' + t("console") + '</a><button class="btn w" data-a="reset">' + t("reset") + '</button></div><button class="btn" data-a="closesheet">' + t("close") + "</button></div>";
+    }
+    if (o && o.type === "notif") {
+      var two = o.id === "m5";
+      h += '<button class="notif" data-a="opennotif"><div class="logo">' + I.alert + "</div><div><b>" + t(two ? "notif2T" : "notifT") + "</b><span>" + t(two ? "notif2S" : "notifS") + "</span></div></button>";
+    }
+    if (o && o.type === "call") {
+      var ci = callInfo(o.n), reported = S.done["c" + o.n], showNum = ci.tone === "green" || ci.tone === "blue";
+      var repBtn = !showNum ? '<button class="rep" data-a="reportcall" data-v="' + esc(o.n) + '"' + (reported ? " disabled" : "") + ">" + (reported ? t("reported") : t("repNum")) + "</button>" : "";
+      if (!o.answered) {
+        h += '<div class="call"><div class="top">' + t("incoming") + '</div><div class="avt">' + I.user + "</div><h2>" + esc(ci.title) + "</h2>" + (showNum ? '<div class="num">' + esc(o.n) + "</div>" : "") +
+          '<div class="badge ' + ci.tone + '">' + ci.badge + '</div><p class="sub">' + esc(ci.sub) + '</p><div class="sp"></div>' + repBtn +
+          '<div class="acts"><button class="circ r" data-a="decline" aria-label="' + t("decline") + '">' + I.end + '</button><button class="circ g" data-a="answer" aria-label="' + t("answer") + '">' + I.phone + "</button></div></div>";
+      } else {
+        var b = ci.tone === "red" ? ["red", t("bNoPin"), t("bNoPinSub")] : ci.tone === "green" ? ["green", t("bVer"), t("bVerSub")] : ci.tone === "blue" ? ["green", t("bContact"), t("bContactSub")] : ci.tone === "amber" ? ["amber", t("bCare"), t("bCareSub")] : ["amber", t("bUnk"), t("bUnkSub")];
+        h += '<div class="call"><div class="top">' + t("inCall") + '</div><div class="avt">' + I.user + "</div><h2>" + esc(ci.title) + '</h2><div class="timer" id="tm">00:00</div><div class="ban ' + b[0] + '"><b>' + b[1] + "</b>" + b[2] + '</div><div class="sp"></div>' + repBtn +
+          '<div class="acts" style="justify-content:center"><button class="circ r" data-a="decline" aria-label="End call">' + I.end + "</button></div></div>";
+        if (o.stk) h += '<div class="stk"><h4>M-PESA</h4><p>Pay KSh 4,500.00 to JOHN KAMAU 0711 000 412?<br>Enter M-PESA PIN.</p><div class="pin">• • • •</div><div class="tb"><span>Cancel</span><span>OK</span></div></div>';
+        if (o.sheet) h += '<div class="sheet red"><h3>' + I.alert + " " + t("stop") + "</h3><p>" + t("stopSub") + '</p><div class="btns"><button class="btn r w" data-a="pincancel">' + t("cancelPay") + '</button><button class="btn w" data-a="pinok">' + t("knowThem") + "</button></div></div>";
+      }
+    }
+    $("#ov").innerHTML = h;
+  }
+  function toast(x) {
+    var el = document.createElement("div"); el.className = "toast"; el.textContent = x; $("#app").appendChild(el);
+    setTimeout(function () { el.remove(); }, 2600);
+  }
+  function startTimer() {
+    var s = 0, iv = setInterval(function () {
+      var el = $("#tm"); if (!el || !S.ov || !S.ov.answered) { clearInterval(iv); return; }
+      s++; el.textContent = "00:" + (s < 10 ? "0" + s : s);
+    }, 1000); timers.push(iv);
+  }
+
+  /* ---------- the "I've been scammed" steps ---------- */
+  function lookupRec(num) {
+    var k = Shared.findKey(S.shared.db, num), r = k ? S.shared.db[k] : null;
+    return r && r.status !== "verified" ? { status: r.status, count: r.count } : null;
+  }
+  function flowStart() {
+    clearTimers(); S.ov = null; S.sheet = null; S.msg = null; S.tab = "ask";
+    S.flow = { data: {}, done: false }; S.chat = [{ flowIntro: true }, { flowQ: "kind" }];
+    render(); renderOv();
+  }
+  function flowAdvance() {
+    var nx = FL.next(S.flow.data);
+    if (nx) S.chat.push({ flowQ: nx.id });
+    else { S.flow.done = true; S.flow.result = FL.build(S.flow.data, lookupRec, new Date()); S.chat.push({ flowDone: true }); }
+    render(); toBottom();
+  }
+  function flowChoice(v) {
+    var st = curStep(); if (!st) return;
+    var o = st.options().filter(function (x) { return x.v === v; })[0];
+    S.flow.data[st.id] = v; S.chat.push({ me: o[S.lang] }); flowAdvance();
+  }
+  function flowSkip() { var st = curStep(); if (!st) return; S.flow.data[st.id] = null; S.chat.push({ me: t("skip") }); flowAdvance(); }
+  function flowText(text) {
+    var st = curStep(); if (!st) return;
+    S.chat = S.chat.filter(function (c) { return !c.flowErr; });
+    var shown = text.length > 70 ? text.slice(0, 70) + "..." : text;
+    if (!FL.answerText(S.flow.data, st, text)) { S.chat.push({ me: shown }, { flowErr: st.id }); render(); toBottom(); return; }
+    S.chat.push({ me: shown }); flowAdvance();
+  }
+  function copyReport() {
+    var txt = S.flow && S.flow.result ? S.flow.result.text : "";
+    function manual() {
+      try { var el = $("#reportText"), r = document.createRange(); r.selectNodeContents(el); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); } catch (e) {}
+      toast(t("copyManual"));
+    }
+    try { navigator.clipboard.writeText(txt).then(function () { toast(t("copied")); }, manual); } catch (e) { manual(); }
+  }
+  function sendCase() {
+    var r = S.flow.result, d = S.flow.data;
+    function line(l) { var x = r.lines.filter(function (y) { return y[0] === l; })[0]; return x ? x[1] : ""; }
+    S.shared = Shared.addCase({ ref: r.ref, type: FL.KINDS[d.kind].label, amount: d.amount || null, code: d.code || null, when: line("When"), who: d.who || null });
+    if (d.who && /\d{4}/.test(d.who)) S.shared = Shared.report(d.who, "other");
+    S.flow.sent = true; S.reports++; toast(t("caseSent")); render(true);
+  }
+
+  /* ---------- actions ---------- */
+  function doReport(n, type, doneKey) {
+    S.shared = Shared.report(n, type); S.reports++; S.done[doneKey] = true;
+    toast(t("sentToTeam")); render(true); renderOv();
+  }
+  function callOpen(n, pin) { S.sheet = null; S.ov = { type: "call", n: n, answered: false, pin: !!pin }; renderOv(); }
+  function ask(text) {
+    if (flowActive()) { S.flow = null; S.chat = S.chat.filter(function (c) { return !c.flowIntro && !c.flowQ && !c.flowErr; }); }
+    S.tab = "ask"; S.msg = null; S.sheet = null; renderOv();
+    S.chat = S.chat.filter(function (c) { return !c.typing; });
+    S.chat.push({ me: text }, { typing: true }); render(); toBottom();
+    later(function () {
+      S.chat = S.chat.filter(function (c) { return !c.typing; });
+      S.chat.push({ res: analyzeAsk(text), text: text }); render(); toBottom();
+    }, 700);
+  }
+  function analyzeAsk(text) {
+    if (/^[\d\s+\-()]{3,16}$/.test(text.trim())) {
+      var key = Shared.findKey(S.shared.db, text.trim()), d = key ? S.shared.db[key] : null, ct = contactOf(text.trim());
+      if (d && d.status === "verified") return { level: "ok", score: 2, reasons: [{ k: "vernum" }], showWhy: true, words: [], steps: ["careful"] };
+      if (d && d.status === "confirmed") return { level: "scam", score: 99, reasons: [{ k: "list", n: key, c: d.count }], words: [], steps: ["nosend", "nopin", "fwd333"] };
+      if (d) return { level: "caution", score: 70, reasons: [{ k: "pending", n: key, c: d.count }], words: [], steps: ["nopin", "verify"] };
+      if (ct) return { level: "ok", score: 4, reasons: [], words: [], steps: ["careful"] };
+      return { level: "caution", score: 40, reasons: [{ k: "unknownnum" }], words: [], steps: ["verify", "nopin"] };
+    }
+    return M.scan(text, { db: S.shared.db, contacts: CONTACTS });
+  }
+  function act(a, v, el) {
+    if (a === "tab") { S.tab = v; S.msg = null; render(); }
+    else if (a === "lang") { S.lang = v; try { localStorage.setItem("linda_lang", v); } catch (e) {} render(true); renderOv(); }
+    else if (a === "demo") { S.sheet = "demo"; renderOv(); }
+    else if (a === "closesheet") { S.sheet = null; renderOv(); }
+    else if (a === "openmsg") { S.tab = "msgs"; S.msg = v; if (S.ov && S.ov.type === "notif") S.ov = null; S.sheet = null; renderOv(); render(); }
+    else if (a === "opennotif") { act("openmsg", (S.ov && S.ov.id) || "m2"); }
+    else if (a === "closemsg") { S.msg = null; render(); }
+    else if (a === "toast") { toast(t(v)); }
+    else if (a === "reportmsg") { var m = MSGS.filter(function (x) { return x.id === v; })[0], r = scanMsg(m); doReport(/^[\d\s]+$/.test(m.from) ? m.from : (m.id === "m3" ? "0722 000 318" : m.from), typeOf(r, m.body), m.id); }
+    else if (a === "reportcall") { var ci = callInfo(v); doReport(v, ci.d ? ci.d.type : "other", "c" + v); }
+    else if (a === "callnum") { callOpen(v); }
+    else if (a === "answer") {
+      S.ov.answered = true; renderOv(); startTimer();
+      if (S.ov.pin) {
+        later(function () { if (S.ov && S.ov.answered) { S.ov.stk = true; renderOv(); } }, 2800);
+        later(function () { if (S.ov && S.ov.stk) { S.ov.sheet = true; renderOv(); } }, 3900);
+      }
+    }
+    else if (a === "decline") { S.ov = null; clearTimers(); renderOv(); }
+    else if (a === "pincancel") { doReport("0711 000 412", "reversal", "c0711 000 412"); S.ov = null; clearTimers(); renderOv(); toast(t("payCancelled")); }
+    else if (a === "pinok") { S.ov.sheet = false; renderOv(); toast(t("watching")); }
+    else if (a === "chip") { ask(SUGG[+v]); }
+    else if (a === "ask") {
+      var i = $("#askInput"); if (!i || !i.value.trim()) return;
+      var x = i.value.trim(), cs = curStep();
+      if (cs && cs.type === "choice") { toast(t("tapOption")); return; }
+      i.value = "";
+      if (cs) flowText(x); else ask(x);
+    }
+    else if (a === "flowstart") { flowStart(); }
+    else if (a === "flowstop") { S.flow = null; S.chat = []; render(); }
+    else if (a === "flowopt") { flowChoice(v); }
+    else if (a === "flowskip") { flowSkip(); }
+    else if (a === "copycase") { copyReport(); }
+    else if (a === "sendcase") { sendCase(); }
+    else if (a === "scn") { scenario(+v); }
+    else if (a === "reset") { S.shared = Shared.reset(); S.done = {}; S.reports = 0; S.chat = []; S.flow = null; S.ov = null; S.sheet = null; S.msg = null; clearTimers(); render(); renderOv(); toast("OK"); }
+  }
+  function scenario(n) {
+    clearTimers(); S.ov = null; S.msg = null; S.sheet = null; S.tab = "home"; render();
+    if (n === 1) { S.tab = "msgs"; render(); S.ov = { type: "notif", id: "m2" }; renderOv(); }
+    else if (n === 2) callOpen("0711 000 412");
+    else if (n === 3) callOpen("100");
+    else if (n === 4) callOpen("0745 000 777");
+    else if (n === 5) callOpen("0711 000 412", true);
+    else if (n === 6) callOpen("0722 555 101");
+    else if (n === 7) { S.tab = "msgs"; render(); S.ov = { type: "notif", id: "m5" }; renderOv(); }
+    else if (n === 8) flowStart();
+  }
+
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-a]"); if (!b || b.disabled) return;
+    act(b.dataset.a, b.dataset.v, b);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && e.target && e.target.id === "askInput") { e.preventDefault(); act("ask"); }
+  });
+  Shared.onChange(function (s) {
+    var before = S.shared; S.shared = s;
+    Object.keys(s.db).forEach(function (k) {
+      var b = before.db[k];
+      if (b && b.status !== "confirmed" && s.db[k].status === "confirmed") toast(t("confirmedNow").replace("{n}", k));
+    });
+    render(true); renderOv();
+  });
+  function tick() { var d = new Date(), el = $("#clk"); if (el) el.textContent = Shared.fmtTime(d.getTime()); }
+  tick(); setInterval(tick, 30000);
+  render(); renderOv();
+
+  if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener("load", function () { try { navigator.serviceWorker.register("sw.js").catch(function () {}); } catch (e) {} });
+  }
+})();
+</script>
